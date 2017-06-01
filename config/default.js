@@ -1,4 +1,5 @@
 var config = {
+	port: 3003,
 	musicDir: 'D:/data/music',
 	extensions: [ 
 		'.aac',

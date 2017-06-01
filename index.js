@@ -5,10 +5,14 @@ var MPlayer = require('mplayer');
 var player = new MPlayer();//*/{ debug: true });
 
 var app = express();
+var server = require('http').Server(app);
+var io = require('socket.io')(server);
 
 var musicDir = config.get('musicDir');
 var exts = config.get('extensions');
+var playlistSize = 20;
 var playlist = [];
+var requestlist = [];
 var currentFile = '';
 
 player.on('status', (stat) => {
@@ -80,33 +84,53 @@ function progressPlayList (playlist) {
 	currentFile = playlist.shift();
 	console.log ('play: ' + currentFile)
 	player.openFile(currentFile);
-	fillPlayList (20, playlist);
+	fillPlayList (playlistSize, playlist);
+	sendPlaylistUpdate();
+}
+
+
+
+function handleCommand (data) {
+	switch (data.cmd) {
+		case 'play':
+			player.play ();
+			break;
+		case 'pause':
+			player.pause ();
+			break;
+		case 'next':
+			player.stop (); // this will cause the stop callback to trigger and start the next song
+			break;
+		case 'veto':
+			break;
+	}
+}
+
+function sendPlaylistUpdate (socket) {
+	socket = socket || io;
+	socket.emit('playlist', { requestlist: requestlist, playlist: playlist });
 }
 
 //player.volume(100);
 
-//app.use(express.static("public"));
+app.use(express.static("public"));
 
-app.get ('/', function(req, res, next){
+app.get ('/playlist', function(req, res, next){
 	res.status(200).json(playlist);
 });
 
 app.get ('/play', function(req, res, next){
-	player.play (); // this will cause the stop callback to trigger and start the next song
+	handleCommand ({ cmd: 'play' });
     res.redirect('/');
 });
 app.get ('/pause', function(req, res, next){
-	player.pause (); // this will cause the stop callback to trigger and start the next song
+	handleCommand ({ cmd: 'pause' });
     res.redirect('/');
 });
 
 app.get ('/next', function(req, res, next){
-	player.stop (); // this will cause the stop callback to trigger and start the next song
+	handleCommand ({ cmd: 'next' });
     res.redirect('/');
-});
-
-app.listen(3003,function(){
-	console.log('App listening on port 3003!');
 });
 
 app.get('/stream', function(req, res){
@@ -114,6 +138,21 @@ app.get('/stream', function(req, res){
 	rstream.pipe(res);	
 });
 
-fillPlayList (20, playlist, (pl) => {
+
+io.on('connection', function (socket) {
+	sendPlaylistUpdate(socket);
+	socket.on('command', function (data) {
+		handleCommand (data);
+	});
+});
+
+// we first need to start up the web server
+var port = config.get('port');
+server.listen(port, function(){
+	console.log('App listening on port ' + port);
+});
+
+// and then we can start playing music
+fillPlayList (playlistSize, playlist, (pl) => {
 	progressPlayList (pl);
 });

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>MPlayer</title>
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+	<style>
+	html {
+		position: relative;
+		min-height: 100%;
+	}
+	.main {
+		padding-top: 24px;
+		padding-bottom: 24px;
+	}
+	.main div[class^="col"] {
+		padding-top: 16px;
+		padding-bottom: 16px;
+	}
+	</style>
+</head>
+
+<body>
+	<nav class="navbar navbar-inverse bg-inverse">
+		<a class="navbar-brand" href="#">MPlayer</a>
+    </nav>
+
+	<div class="container main">
+		<div class="row justify-content-center">
+			<div class="col-6 text-center">
+				<div class="btn-group" role="group" aria-label="Controls">
+					<button type="button" class="btn btn-secondary js-ctrl-play"><i class="fa fa-pause" aria-hidden="true"></i></button>
+					<button type="button" class="btn btn-secondary js-ctrl-next"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
+					<button type="button" class="btn btn-secondary js-ctrl-veto">Veto</button>
+				</div>
+			</div>
+		</div>
+		
+		<table class="table text-center">
+			<tbody>
+				<tr><td class="font-weight-bold">Mark</td></tr>
+				<tr><td>Jacob</td></tr>
+			</tbody>
+		</table>
+				
+		<table class="table table-sm table-hover">
+			<thead>
+				<tr>
+					<th>#</th>
+					<th>Title</th>
+					<th>Artist</th>
+				</tr>
+			</thead>
+			<tbody id="requestlist">
+				<tr>
+				<th scope="row">R</th>
+				<td>Mark</td>
+				<td>Otto</td>
+				</tr>
+			</tbody>
+			<tbody id="playlist">
+				<tr>
+				<th scope="row">1</th>
+				<td>Jacob</td>
+				<td>Thornton</td>
+				</tr>
+				<tr>
+				<th scope="row">2</th>
+				<td colspan="2">Larry the Bird</td>
+				</tr>
+			</tbody>
+		</table>
+		<button type="button" class="btn btn-secondary" disabled>Request</button>
+	</div>
+	
+	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+	<script>
+	$(document).ready(function () {
+		var socket = io.connect();
+		socket.on('playlist', function (data) {
+			console.log(data);
+			//list all playlist data
+			
+		});
+		
+		$('.js-ctrl-play').click(function(){ 
+			socket.emit('command', { cmd: 'play' });
+			return false;
+		});
+		$('.js-ctrl-next').click(function(){ 
+			socket.emit('command', { cmd: 'next' });
+			return false;
+		});
+		$('.js-ctrl-veto').click(function(){ 
+			socket.emit('command', { cmd: 'veto' });
+			return false;
+		});
+	});
+	</script>
+</body>
+</html>
