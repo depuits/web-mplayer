@@ -145,13 +145,21 @@ function handleCommand(data) {
 			player.pause ();
 			break;
 		case 'next':
-			//playBit('next.mp3'); //TODO reenable
+			if(nextTimoutVar) {
+				return;
+			}
+			playBit('next.mp3');
 			nextTimoutVar = setTimeout(() => {
 				nextTimoutVar = undefined;
 				player.stop(); 
 			}, 5000); // this will cause the stop callback to trigger and start the next song*/
 			break;
 		case 'veto':
+			if(nextTimoutVar) {
+				playBit('veto.mp3');
+				clearTimeout(nextTimoutVar);
+				nextTimoutVar = undefined;
+			}
 			break;
 	}
 }
