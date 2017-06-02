@@ -1,3 +1,5 @@
+'use strict';
+
 var fs = require('fs');
 var config = require('config');
 var express = require("express");
@@ -15,13 +17,40 @@ var playlist = [];
 var requestlist = [];
 var currentFile = '';
 
+var skipStop = false;
+var contTime = undefined;
+var nextTimoutVar = undefined;
+
 player.on('status', (stat) => {
 	//console.log (stat);
 	//sendPlayerStatus();
 });
 
 player.on('stop', () => {
-	progressPlayList(playlist);
+	console.log('audio stopped: ' + contTime);
+	if(skipStop) {
+		console.log('skipping stop');
+		skipStop = false;
+		return;
+	}
+
+	if(contTime) {
+		console.log('resuming play');
+		console.log('of: ' + currentFile);
+		console.log('at: ' + contTime);
+
+		player.openFile(currentFile);
+		player.seek(contTime);
+		contTime = undefined;
+
+		console.log (player.status);
+	} else {
+		if (nextTimoutVar) {
+			clearTimeout(nextTimoutVar);
+			nextTimoutVar = undefined;
+		}
+		progressPlayList(playlist);
+	}
 });
 
 function getRandomFile(dir, cb) {
@@ -88,7 +117,16 @@ function progressPlayList(playlist) {
 	fillPlayList (playlistSize, playlist, (pl) => { sendPlaylistUpdate(); });
 }
 
+function playBit(bit) {
+	var file = __dirname + '/soundbits/' + bit;
+	file = file.replace(/\\/g , "/"); // windows fix, mplayer doesn't handle backspaces well
 
+	contTime = player.status.position;
+	skipStop = true; // we need to skip the stop callback because it will be called when starting the next sound
+	console.log('play bit: ' + file);
+	console.log('will continue playing at ' + contTime);
+	player.openFile(file);
+}
 
 function handleCommand(data) {
 	switch(data.cmd) {
@@ -107,7 +145,11 @@ function handleCommand(data) {
 			player.pause ();
 			break;
 		case 'next':
-			player.stop (); // this will cause the stop callback to trigger and start the next song
+			//playBit('next.mp3'); //TODO reenable
+			nextTimoutVar = setTimeout(() => {
+				nextTimoutVar = undefined;
+				player.stop(); 
+			}, 5000); // this will cause the stop callback to trigger and start the next song*/
 			break;
 		case 'veto':
 			break;
