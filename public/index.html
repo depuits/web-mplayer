@@ -33,7 +33,7 @@
 		<div class="row justify-content-center">
 			<div class="col-6 text-center">
 				<div class="btn-group" role="group" aria-label="Controls">
-					<button type="button" class="btn btn-secondary js-ctrl-play"><i class="fa fa-pause" aria-hidden="true"></i></button>
+					<button type="button" class="btn btn-secondary js-ctrl-play"><i class="fa fa-pause js-ctrl-play-visual" aria-hidden="true"></i></button>
 					<button type="button" class="btn btn-secondary js-ctrl-next"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
 					<button type="button" class="btn btn-secondary js-ctrl-veto">Veto</button>
 				</div>
@@ -41,9 +41,9 @@
 		</div>
 		
 		<table class="table text-center">
-			<tbody>
-				<tr><td class="font-weight-bold">Mark</td></tr>
-				<tr><td>Jacob</td></tr>
+			<tbody id="currentSong">
+				<tr><td class="js-pl-title font-weight-bold"></td></tr>
+				<tr><td class="js-pl-artist"></td></tr>
 			</tbody>
 		</table>
 				
@@ -55,53 +55,101 @@
 					<th>Artist</th>
 				</tr>
 			</thead>
-			<tbody id="requestlist">
-				<tr>
-				<th scope="row">R</th>
-				<td>Mark</td>
-				<td>Otto</td>
-				</tr>
-			</tbody>
-			<tbody id="playlist">
-				<tr>
-				<th scope="row">1</th>
-				<td>Jacob</td>
-				<td>Thornton</td>
-				</tr>
-				<tr>
-				<th scope="row">2</th>
-				<td colspan="2">Larry the Bird</td>
-				</tr>
-			</tbody>
+			<tbody id="requestlist"></tbody>
+			<tbody id="playlist"></tbody>
 		</table>
 		<button type="button" class="btn btn-secondary" disabled>Request</button>
 	</div>
-	
+
+	<script type="text/html" id="playlistItemTemplate">
+		<tr>
+			<th class="js-pl-id" scope="row">#</th>
+			<td class="js-pl-title"></td>
+			<td class="js-pl-artist"></td>
+		</tr>
+	</script>
+
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 	<script>
 	$(document).ready(function () {
+		var $currentSong = $('#currentSong');
+		var $currentSongTitle = $currentSong.find('.js-pl-title');
+		var $currentSongArtist = $currentSong.find('.js-pl-artist');
+
+		var $playlistItemTemplate = $('#playlistItemTemplate');
+		var $requestlist = $('#requestlist');
+		var $playlist = $('#playlist');
+
+		var $btnPlayVisual = $('.js-ctrl-play-visual');
+
 		var socket = io.connect();
-		socket.on('playlist', function (data) {
-			console.log(data);
-			//list all playlist data
-			
+		socket.on('playlist', function(data) {
+			//update current song
+			$currentSongTitle.text(data.current);
+			$currentSongArtist.text(''); // TODO
+
+			// update requests and playlist
+			//TODO update dom without rebuilding complete playlist
+			updatePlaylist($requestlist, data.requestlist, 'R');
+			updatePlaylist($playlist, data.playlist);			
 		});
-		
-		$('.js-ctrl-play').click(function(){ 
-			socket.emit('command', { cmd: 'play' });
+
+		socket.on('status', function(status) {
+			updatePlayButton(status.playing);
+		});
+
+		$('.js-ctrl-play').click(function() { 
+			socket.emit('command', { cmd: 'togglePlay' });
 			return false;
 		});
-		$('.js-ctrl-next').click(function(){ 
+		$('.js-ctrl-next').click(function() { 
 			socket.emit('command', { cmd: 'next' });
 			return false;
 		});
-		$('.js-ctrl-veto').click(function(){ 
+		$('.js-ctrl-veto').click(function() { 
 			socket.emit('command', { cmd: 'veto' });
 			return false;
 		});
+
+		function updatePlaylist($listEl, list, id) {
+			//clear the previous list
+			$listEl.empty();
+
+			// loop all items in the list and add them to the element
+			for (var i = 0; i < list.length; ++i) {
+				var title = list[i];
+				var artist = ''; //TODO
+
+				var newTxt = $playlistItemTemplate.text();
+				var $newElem = $(newTxt);
+
+				$newElem.find('.js-pl-id').text(id || (i + 1));
+				var $title = $newElem.find('.js-pl-title');	
+				var $artist = $newElem.find('.js-pl-artist');
+				$title.text(title);
+				if(artist) {
+					$artist.text(artist);
+				} else {
+					$title.attr('colspan', 2);
+					$artist.remove();
+				}
+
+				$listEl.append($newElem);
+			}
+		}
+
+		function updatePlayButton(playing) {
+			if(playing) {
+				$btnPlayVisual.removeClass('fa-play');
+				$btnPlayVisual.addClass('fa-pause');
+			} else {
+				$btnPlayVisual.removeClass('fa-pause');
+				$btnPlayVisual.addClass('fa-play');				
+			}
+		}
 	});
 	</script>
 </body>

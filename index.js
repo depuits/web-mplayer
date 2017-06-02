@@ -17,34 +17,35 @@ var currentFile = '';
 
 player.on('status', (stat) => {
 	//console.log (stat);
+	//sendPlayerStatus();
 });
 
 player.on('stop', () => {
-	progressPlayList (playlist);
+	progressPlayList(playlist);
 });
 
-function getRandomFile (dir, cb) {
+function getRandomFile(dir, cb) {
 	fs.readdir(dir, (err, files) => {
-		if (err) {
-			return cb (err);
+		if(err) {
+			return cb(err);
 		}
 		var f = dir + '/' + files[Math.floor(Math.random()*files.length)];
-		fs.stat (f, (err, stats) => {
-			if (err) {
-				return cb (err);
+		fs.stat(f, (err, stats) => {
+			if(err) {
+				return cb(err);
 			}
-			if (stats.isDirectory ()) {
-				getRandomFile (f, cb);
+			if(stats.isDirectory()) {
+				getRandomFile(f, cb);
 			} else {
-				cb (null, f);
+				cb(null, f);
 			}
 		});
 	});
 }
 
 function hasExtension (f, exts) {	
-	for (let e of exts) {
-		if (f.endsWith (e)) {
+	for(let e of exts) {
+		if(f.endsWith (e)) {
 			return true;
 		}
 	}
@@ -52,26 +53,26 @@ function hasExtension (f, exts) {
 	return false;
 }
 
-function fillPlayList (count, playlist, cb) {
+function fillPlayList(count, playlist, cb) {
 	playlist = playlist || [];
 	
 	// check playlist lenght before starting anything to avoid flooding it
-	if (playlist.length >= count) {
-		if (cb) {
+	if(playlist.length >= count) {
+		if(cb) {
 			cb (playlist);
 		}
 		return;
 	}
 		
 	getRandomFile (musicDir, (err, f) => {
-		if (err) {
-			console.log ('Error: ' + err);
+		if(err) {
+			console.log('Error: ' + err);
 		} else {
-			var isValid = hasExtension (f, exts);
-			if (isValid) {
-				playlist.push (f);
+			var isValid = hasExtension(f, exts);
+			if(isValid) {
+				playlist.push(f);
 			} else {
-				console.log ('skipping: ' + f)
+				console.log('skipping: ' + f)
 			}
 		}
 		
@@ -80,18 +81,25 @@ function fillPlayList (count, playlist, cb) {
 	});
 }
 
-function progressPlayList (playlist) {
+function progressPlayList(playlist) {
 	currentFile = playlist.shift();
 	console.log ('play: ' + currentFile)
 	player.openFile(currentFile);
-	fillPlayList (playlistSize, playlist);
-	sendPlaylistUpdate();
+	fillPlayList (playlistSize, playlist, (pl) => { sendPlaylistUpdate(); });
 }
 
 
 
-function handleCommand (data) {
-	switch (data.cmd) {
+function handleCommand(data) {
+	switch(data.cmd) {
+		case 'togglePlay':
+			if(player.status.playing) {
+				player.pause ();
+			} else {
+				player.play ();
+			}
+			sendPlayerStatus();
+			break;
 		case 'play':
 			player.play ();
 			break;
@@ -106,31 +114,45 @@ function handleCommand (data) {
 	}
 }
 
-function sendPlaylistUpdate (socket) {
+function sendPlaylistUpdate(socket) {
 	socket = socket || io;
-	socket.emit('playlist', { requestlist: requestlist, playlist: playlist });
+	//TODO we should filter the playlist to not send the complete file path
+	socket.emit('playlist', { 
+		current: currentFile, 
+		requestlist: requestlist, 
+		playlist: playlist 
+	});
+}
+
+function sendPlayerStatus(socket) {
+	socket = socket || io;
+	socket.emit('status', player.status);
 }
 
 //player.volume(100);
 
 app.use(express.static("public"));
 
-app.get ('/playlist', function(req, res, next){
+app.get('/playlist', function(req, res, next){
 	res.status(200).json(playlist);
 });
 
-app.get ('/play', function(req, res, next){
-	handleCommand ({ cmd: 'play' });
-    res.redirect('/');
+app.get('/togglePlay', function(req, res, next){
+	handleCommand ({ cmd: 'togglePlay' });
+	res.redirect('/');
 });
-app.get ('/pause', function(req, res, next){
+app.get('/play', function(req, res, next){
+	handleCommand ({ cmd: 'play' });
+	res.redirect('/');
+});
+app.get('/pause', function(req, res, next){
 	handleCommand ({ cmd: 'pause' });
-    res.redirect('/');
+	res.redirect('/');
 });
 
-app.get ('/next', function(req, res, next){
+app.get('/next', function(req, res, next){
 	handleCommand ({ cmd: 'next' });
-    res.redirect('/');
+	res.redirect('/');
 });
 
 app.get('/stream', function(req, res){
@@ -141,18 +163,18 @@ app.get('/stream', function(req, res){
 
 io.on('connection', function (socket) {
 	sendPlaylistUpdate(socket);
-	socket.on('command', function (data) {
+	socket.on('command', (data) => {
 		handleCommand (data);
 	});
 });
 
 // we first need to start up the web server
 var port = config.get('port');
-server.listen(port, function(){
+server.listen(port, () => {
 	console.log('App listening on port ' + port);
 });
 
 // and then we can start playing music
-fillPlayList (playlistSize, playlist, (pl) => {
+fillPlayList(playlistSize, playlist, (pl) => {
 	progressPlayList (pl);
 });
