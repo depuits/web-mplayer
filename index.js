@@ -176,6 +176,9 @@ function handleCommand(data) {
 			player.volume(data.value);
 			sendPlayerStatus();
 			break;
+		case 'playBit':
+			playBit(data.file);
+			break;
 	}
 }
 
