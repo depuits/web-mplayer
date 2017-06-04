@@ -1,6 +1,6 @@
 var config = {
 	port: 3003,
-	musicDir: 'D:/data/music',
+	musicDir: '/media/data/media/music',
 	extensions: [ 
 		'.aac',
 		'.ac3',
@@ -9,7 +9,9 @@ var config = {
 		'.wma',
 		'.m4a',
 		'.flac'
-	]
+	],
+	nextDelay: 5000,
+	soundBitVolume: 40
 };
 
 module.exports = config;

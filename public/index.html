@@ -40,6 +40,12 @@
 			</div>
 		</div>
 		
+		<div class="row justify-content-center">
+			<div class="col-6 text-center">
+				<input type="range" min="0" max="100" class="js-ctrl-volume" />
+			</div>
+		</div>
+
 		<table class="table text-center">
 			<tbody id="currentSong">
 				<tr><td class="js-pl-title font-weight-bold"></td></tr>
@@ -84,12 +90,12 @@
 		var $playlist = $('#playlist');
 
 		var $btnPlayVisual = $('.js-ctrl-play-visual');
+		var $ctrlVolume = $('.js-ctrl-volume');
 
 		var socket = io.connect();
 		socket.on('playlist', function(data) {
 			//update current song
-			$currentSongTitle.text(data.current);
-			$currentSongArtist.text(''); // TODO
+			updateCurrent(data.current);
 
 			// update requests and playlist
 			//TODO update dom without rebuilding complete playlist
@@ -99,6 +105,7 @@
 
 		socket.on('status', function(status) {
 			updatePlayButton(status.playing);
+			updateVolumeBar(status.volume);
 		});
 
 		$('.js-ctrl-play').click(function() { 
@@ -114,13 +121,28 @@
 			return false;
 		});
 
+		$ctrlVolume.change(function() {
+			var vol = $(this).val();
+			socket.emit('command', { cmd: 'volume', value: vol });
+			return false;
+		});
+
+		function updateCurrent(current) {
+			var cur = current.substr(current.lastIndexOf('/') + 1);
+			$currentSongTitle.text(cur);
+			$currentSongArtist.text(''); // TODO
+
+			document.title = 'MPlayer: ' + cur;
+		}
+
 		function updatePlaylist($listEl, list, id) {
 			//clear the previous list
 			$listEl.empty();
 
 			// loop all items in the list and add them to the element
 			for (var i = 0; i < list.length; ++i) {
-				var title = list[i];
+				var current = list[i];
+				var title = current.substr(current.lastIndexOf('/') + 1);
 				var artist = ''; //TODO
 
 				var newTxt = $playlistItemTemplate.text();
@@ -149,6 +171,11 @@
 				$btnPlayVisual.removeClass('fa-pause');
 				$btnPlayVisual.addClass('fa-play');				
 			}
+		}
+
+		function updateVolumeBar(volume) {
+			if(volume != undefined)
+			$ctrlVolume.val(volume);
 		}
 	});
 	</script>

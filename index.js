@@ -17,6 +17,10 @@ var playlist = [];
 var requestlist = [];
 var currentFile = '';
 
+var nextDelay = config.get('nextDelay');
+var soundBitVolume = config.get('soundBitVolume');
+var originalVolume = 0;
+
 var skipStop = false;
 var contTime = undefined;
 var nextTimoutVar = undefined;
@@ -38,8 +42,10 @@ player.on('stop', () => {
 		console.log('resuming play');
 		console.log('of: ' + currentFile);
 		console.log('at: ' + contTime);
+		console.log('vol: ' + originalVolume);
 
 		player.openFile(currentFile);
+		player.volume(originalVolume);
 		player.seek(contTime);
 		contTime = undefined;
 
@@ -122,10 +128,12 @@ function playBit(bit) {
 	file = file.replace(/\\/g , "/"); // windows fix, mplayer doesn't handle backspaces well
 
 	contTime = player.status.position;
+	originalVolume = player.status.volume;
 	skipStop = true; // we need to skip the stop callback because it will be called when starting the next sound
 	console.log('play bit: ' + file);
 	console.log('will continue playing at ' + contTime);
 	player.openFile(file);
+	player.volume(soundBitVolume);
 }
 
 function handleCommand(data) {
@@ -133,6 +141,7 @@ function handleCommand(data) {
 		case 'togglePlay':
 			if(player.status.playing) {
 				player.pause ();
+				player.player.cmd('get_property', ['volume']);
 			} else {
 				player.play ();
 			}
@@ -140,9 +149,11 @@ function handleCommand(data) {
 			break;
 		case 'play':
 			player.play ();
+			sendPlayerStatus();
 			break;
 		case 'pause':
 			player.pause ();
+			sendPlayerStatus();
 			break;
 		case 'next':
 			if(nextTimoutVar) {
@@ -151,8 +162,8 @@ function handleCommand(data) {
 			playBit('next.mp3');
 			nextTimoutVar = setTimeout(() => {
 				nextTimoutVar = undefined;
-				player.stop(); 
-			}, 5000); // this will cause the stop callback to trigger and start the next song*/
+				player.stop();  // this will cause the stop callback to trigger and start the next song
+			}, nextDelay);
 			break;
 		case 'veto':
 			if(nextTimoutVar) {
@@ -160,6 +171,10 @@ function handleCommand(data) {
 				clearTimeout(nextTimoutVar);
 				nextTimoutVar = undefined;
 			}
+			break;
+		case 'volume':
+			player.volume(data.value);
+			sendPlayerStatus();
 			break;
 	}
 }
@@ -178,8 +193,6 @@ function sendPlayerStatus(socket) {
 	socket = socket || io;
 	socket.emit('status', player.status);
 }
-
-//player.volume(100);
 
 app.use(express.static("public"));
 
@@ -213,6 +226,7 @@ app.get('/stream', function(req, res){
 
 io.on('connection', function (socket) {
 	sendPlaylistUpdate(socket);
+	sendPlayerStatus();
 	socket.on('command', (data) => {
 		handleCommand (data);
 	});
