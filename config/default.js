@@ -10,7 +10,7 @@ var config = {
 		'.m4a',
 		'.flac'
 	],
-	nextDelay: 5000,
+	nextDelay: 10000,
 	soundBitVolume: 40
 };
 

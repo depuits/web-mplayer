@@ -3,8 +3,8 @@
 var fs = require('fs');
 var config = require('config');
 var express = require("express");
-var MPlayer = require('mplayer');
-var player = new MPlayer();//*/{ debug: true });
+var mpv = require('node-mpv');
+var player = new mpv({'audio_only': true });//*/, debug: true });
 
 var app = express();
 var server = require('http').Server(app);
@@ -17,39 +17,47 @@ var playlist = [];
 var requestlist = [];
 var currentFile = '';
 
-var nextDelay = config.get('nextDelay');
-var soundBitVolume = config.get('soundBitVolume');
-var originalVolume = 0;
-
-var skipStop = false;
-var contTime = undefined;
 var nextTimoutVar = undefined;
+var nextDelay = config.get('nextDelay');
 
-player.on('status', (stat) => {
-	//console.log (stat);
-	//sendPlayerStatus();
+var soundBitVolume = config.get('soundBitVolume');
+var soundBitInfo = {
+	isActive: false,
+	isStarted: false,
+	prevVolume: 0,
+	prevTime: 0
+};
+
+player.on('statuschange', (stat) => {
+	//only send the status update if we are not playing a soundbit
+	// so the clients don't see irrelevant update (eg. volume, duration, current, ...)
+	if(!soundBitInfo.isActive) {
+		sendPlayerStatus();
+	}
 });
 
-player.on('stop', () => {
-	console.log('audio stopped: ' + contTime);
-	if(skipStop) {
-		console.log('skipping stop');
-		skipStop = false;
-		return;
+player.on('started', () => {
+	console.log('started: sb - ' + soundBitInfo.isActive);
+	if(soundBitInfo.isActive) {
+		if (soundBitInfo.isStarted) {
+			player.goToPosition(soundBitInfo.prevTime);
+			soundBitInfo.isActive = false;	
+		} else {
+			soundBitInfo.isStarted = true;
+		}
 	}
+});
 
-	if(contTime) {
+player.on('stopped', () => {
+	console.log('stopped: sb - ' + soundBitInfo.isActive);
+
+	if(soundBitInfo.isActive) {
 		console.log('resuming play');
 		console.log('of: ' + currentFile);
-		console.log('at: ' + contTime);
-		console.log('vol: ' + originalVolume);
+		console.log(soundBitInfo);
 
-		player.openFile(currentFile);
-		player.volume(originalVolume);
-		player.seek(contTime);
-		contTime = undefined;
-
-		console.log (player.status);
+		player.loadFile(currentFile);
+		player.volume(soundBitInfo.prevVolume);
 	} else {
 		if (nextTimoutVar) {
 			clearTimeout(nextTimoutVar);
@@ -119,7 +127,7 @@ function fillPlayList(count, playlist, cb) {
 function progressPlayList(playlist) {
 	currentFile = playlist.shift();
 	console.log ('play: ' + currentFile)
-	player.openFile(currentFile);
+	player.loadFile(currentFile);
 	fillPlayList (playlistSize, playlist, (pl) => { sendPlaylistUpdate(); });
 }
 
@@ -127,33 +135,28 @@ function playBit(bit) {
 	var file = __dirname + '/soundbits/' + bit;
 	file = file.replace(/\\/g , "/"); // windows fix, mplayer doesn't handle backspaces well
 
-	contTime = player.status.position;
-	originalVolume = player.status.volume;
-	skipStop = true; // we need to skip the stop callback because it will be called when starting the next sound
-	console.log('play bit: ' + file);
-	console.log('will continue playing at ' + contTime);
-	player.openFile(file);
-	player.volume(soundBitVolume);
+	player.getProperty('time-pos').then(function(t) {
+		soundBitInfo.isActive = true;
+		soundBitInfo.isStarted = false;
+		soundBitInfo.prevTime = t;
+		soundBitInfo.prevVolume = player.observed.volume;
+		console.log('play bit: ' + file);
+		console.log('will continue playing at ' + t);
+		player.loadFile(file);
+		player.volume(soundBitVolume);
+	});
 }
 
 function handleCommand(data) {
 	switch(data.cmd) {
 		case 'togglePlay':
-			if(player.status.playing) {
-				player.pause ();
-				player.player.cmd('get_property', ['volume']);
-			} else {
-				player.play ();
-			}
-			sendPlayerStatus();
+			player.togglePause ();
 			break;
 		case 'play':
 			player.play ();
-			sendPlayerStatus();
 			break;
 		case 'pause':
 			player.pause ();
-			sendPlayerStatus();
 			break;
 		case 'next':
 			if(nextTimoutVar) {
@@ -174,7 +177,6 @@ function handleCommand(data) {
 			break;
 		case 'volume':
 			player.volume(data.value);
-			sendPlayerStatus();
 			break;
 		case 'playBit':
 			playBit(data.file);
@@ -194,7 +196,10 @@ function sendPlaylistUpdate(socket) {
 
 function sendPlayerStatus(socket) {
 	socket = socket || io;
-	socket.emit('status', player.status);
+	socket.emit('status', {
+		playing: !player.observed.pause,
+		volume: player.observed.volume
+	});
 }
 
 app.use(express.static("public"));

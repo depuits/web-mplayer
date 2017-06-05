@@ -2,7 +2,11 @@
   "name": "web-mplayer",
   "version": "1.0.0",
   "description": "Music player with web interface",
-  "main": "index.js",
+  "main": "index.js",  
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/depuits/web-mplayer.git"
+  },
   "scripts": {
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,7 +16,7 @@
   "dependencies": {
     "config": "^1.26.1",
     "express": "^4.15.3",
-    "mplayer": "^2.1.0",
+    "node-mpv": "^1.0.3",
     "socket.io": "^2.0.1"
   }
 }
