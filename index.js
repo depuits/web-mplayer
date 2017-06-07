@@ -31,6 +31,7 @@ var soundBitVolume = config.get('soundBitVolume');
 var soundBitInfo = {
 	isActive: false,
 	isStarted: false,
+	wasPaused: false,
 	prevVolume: 0,
 	prevTime: 0
 };
@@ -46,10 +47,14 @@ player.on('statuschange', (stat) => {
 player.on('started', () => {
 	console.log('started: sb - ' + soundBitInfo.isActive);
 	if(soundBitInfo.isActive) {
-		if (soundBitInfo.isStarted) {
+		if(soundBitInfo.isStarted) {
 			player.goToPosition(soundBitInfo.prevTime);
-			soundBitInfo.isActive = false;	
+			soundBitInfo.isActive = false;
+			if(soundBitInfo.wasPaused) {
+				player.pause();
+			}
 		} else {
+			player.play();
 			soundBitInfo.isStarted = true;
 		}
 	}
@@ -144,8 +149,9 @@ function playBit(bit) {
 	player.getProperty('time-pos').then(function(t) {
 		soundBitInfo.isActive = true;
 		soundBitInfo.isStarted = false;
-		soundBitInfo.prevTime = t;
+		soundBitInfo.wasPaused = player.observed.pause
 		soundBitInfo.prevVolume = player.observed.volume;
+		soundBitInfo.prevTime = t;
 		console.log('play bit: ' + file);
 		console.log('will continue playing at ' + t);
 		player.loadFile(file);
