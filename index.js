@@ -1,15 +1,22 @@
 'use strict';
 
+var os = require('os');
 var fs = require('fs');
 var config = require('config');
 var express = require("express");
 var mpv = require('node-mpv');
-var player = new mpv({'audio_only': true });//*/, debug: true });
+var playerOptions = { audio_only: true };//*/, debug: true };
+// windows uses another socket string for mpv
+if (os.platform() === 'win32') {
+	playerOptions.socket = '\\\\.\\pipe\\mpvsocket';
+}
+var player = new mpv(playerOptions);
 
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 
+var port = config.get('port');
 var musicDir = config.get('musicDir');
 var exts = config.get('extensions');
 var playlistSize = 20;
@@ -133,7 +140,6 @@ function progressPlayList(playlist) {
 
 function playBit(bit) {
 	var file = __dirname + '/soundbits/' + bit;
-	file = file.replace(/\\/g , "/"); // windows fix, mplayer doesn't handle backspaces well
 
 	player.getProperty('time-pos').then(function(t) {
 		soundBitInfo.isActive = true;
@@ -241,7 +247,6 @@ io.on('connection', function (socket) {
 });
 
 // we first need to start up the web server
-var port = config.get('port');
 server.listen(port, () => {
 	console.log('App listening on port ' + port);
 });
