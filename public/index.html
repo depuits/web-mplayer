@@ -80,109 +80,128 @@
 	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/fingerprintjs2/1.5.1/fingerprint2.min.js"></script>
 	<script>
-	$(document).ready(function () {
-		var $currentSong = $('#currentSong');
-		var $currentSongTitle = $currentSong.find('.js-pl-title');
-		var $currentSongArtist = $currentSong.find('.js-pl-artist');
+	new Fingerprint2().get(function(finger){
+		$(document).ready(function () {
+			var $currentSong = $('#currentSong');
+			var $currentSongTitle = $currentSong.find('.js-pl-title');
+			var $currentSongArtist = $currentSong.find('.js-pl-artist');
 
-		var $playlistItemTemplate = $('#playlistItemTemplate');
-		var $requestlist = $('#requestlist');
-		var $playlist = $('#playlist');
+			var $playlistItemTemplate = $('#playlistItemTemplate');
+			var $requestlist = $('#requestlist');
+			var $playlist = $('#playlist');
 
-		var $btnPlayVisual = $('.js-ctrl-play-visual');
-		var $ctrlVolume = $('.js-ctrl-volume');
+			var $btnPlayVisual = $('.js-ctrl-play-visual');
+			var $ctrlVolume = $('.js-ctrl-volume');
 
-		var socket = io.connect();
-		socket.on('playlist', function(data) {
-			//update current song
-			updateCurrent(data.current);
+			var socket = io.connect({ query: 'fp=' + finger });
+			socket.on('playlist', function(data) {
+				//update current song
+				updateCurrent(data.current);
 
-			// update requests and playlist
-			//TODO update dom without rebuilding complete playlist
-			updatePlaylist($requestlist, data.requestlist, 'R');
-			updatePlaylist($playlist, data.playlist);			
-		});
+				// update requests and playlist
+				//TODO update dom without rebuilding complete playlist
+				updatePlaylist($requestlist, data.requestlist, 'R');
+				updatePlaylist($playlist, data.playlist);			
+			});
 
-		socket.on('status', function(status) {
-			updatePlayButton(status.playing);
-			updateVolumeBar(status.volume);
-		});
+			socket.on('status', function(status) {
+				updatePlayButton(status.playing);
+				updateVolumeBar(status.volume);
+			});
 
-		$('.js-ctrl-play').click(function() { 
-			socket.emit('command', { cmd: 'togglePlay' });
-			return false;
-		});
-		$('.js-ctrl-next').click(function() { 
-			socket.emit('command', { cmd: 'next' });
-			return false;
-		});
-		$('.js-ctrl-veto').click(function() { 
-			socket.emit('command', { cmd: 'veto' });
-			return false;
-		});
+			$('.js-ctrl-play').click(function() { 
+				socket.emit('command', { cmd: 'togglePlay' });
+				return false;
+			});
+			$('.js-ctrl-next').click(function() { 
+				socket.emit('command', { cmd: 'next' });
+				return false;
+			});
+			$('.js-ctrl-veto').click(function() { 
+				socket.emit('command', { cmd: 'veto' });
+				return false;
+			});
 
-		$('.js-ctrl-dinner').click(function() {
-			socket.emit('command', { cmd: 'playBit', file: 'dinner.mp3' });
-			return false;
-		});
+			$('.js-ctrl-dinner').click(function() {
+				socket.emit('command', { cmd: 'playBit', file: 'dinner.mp3' });
+				return false;
+			});
 
-		$ctrlVolume.change(function() {
-			var vol = $(this).val();
-			socket.emit('command', { cmd: 'volume', value: vol });
-			return false;
-		});
+			$ctrlVolume.change(function() {
+				var vol = $(this).val();
+				socket.emit('command', { cmd: 'volume', value: vol });
+				return false;
+			});
 
-		function updateCurrent(current) {
-			var cur = current.substr(current.lastIndexOf('/') + 1);
-			$currentSongTitle.text(cur);
-			$currentSongArtist.text(''); // TODO
-
-			document.title = 'MPlayer: ' + cur;
-		}
-
-		function updatePlaylist($listEl, list, id) {
-			//clear the previous list
-			$listEl.empty();
-
-			// loop all items in the list and add them to the element
-			for (var i = 0; i < list.length; ++i) {
-				var current = list[i];
-				var title = current.substr(current.lastIndexOf('/') + 1);
-				var artist = ''; //TODO
-
-				var newTxt = $playlistItemTemplate.text();
-				var $newElem = $(newTxt);
-
-				$newElem.find('.js-pl-id').text(id || (i + 1));
-				var $title = $newElem.find('.js-pl-title');	
-				var $artist = $newElem.find('.js-pl-artist');
-				$title.text(title);
-				if(artist) {
-					$artist.text(artist);
-				} else {
-					$title.attr('colspan', 2);
-					$artist.remove();
+			function userId() {
+				
+			}
+			function generateUUID () { // Public Domain/MIT
+				var d = new Date().getTime();
+				if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
+					d += performance.now(); //use high-precision timer if available
 				}
-
-				$listEl.append($newElem);
+				
+				return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+					var r = (d + Math.random() * 16) % 16 | 0;
+					d = Math.floor(d / 16);
+					return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+				});
 			}
-		}
+			
+			function updateCurrent(current) {
+				var cur = current.substr(current.lastIndexOf('/') + 1);
+				$currentSongTitle.text(cur);
+				$currentSongArtist.text(''); // TODO
 
-		function updatePlayButton(playing) {
-			if(playing) {
-				$btnPlayVisual.removeClass('fa-play');
-				$btnPlayVisual.addClass('fa-pause');
-			} else {
-				$btnPlayVisual.removeClass('fa-pause');
-				$btnPlayVisual.addClass('fa-play');				
+				document.title = 'MPlayer: ' + cur;
 			}
-		}
 
-		function updateVolumeBar(volume) {
-			if(volume != undefined)
-			$ctrlVolume.val(volume);
-		}
+			function updatePlaylist($listEl, list, id) {
+				//clear the previous list
+				$listEl.empty();
+
+				// loop all items in the list and add them to the element
+				for (var i = 0; i < list.length; ++i) {
+					var current = list[i];
+					var title = current.substr(current.lastIndexOf('/') + 1);
+					var artist = ''; //TODO
+
+					var newTxt = $playlistItemTemplate.text();
+					var $newElem = $(newTxt);
+
+					$newElem.find('.js-pl-id').text(id || (i + 1));
+					var $title = $newElem.find('.js-pl-title');	
+					var $artist = $newElem.find('.js-pl-artist');
+					$title.text(title);
+					if(artist) {
+						$artist.text(artist);
+					} else {
+						$title.attr('colspan', 2);
+						$artist.remove();
+					}
+
+					$listEl.append($newElem);
+				}
+			}
+
+			function updatePlayButton(playing) {
+				if(playing) {
+					$btnPlayVisual.removeClass('fa-play');
+					$btnPlayVisual.addClass('fa-pause');
+				} else {
+					$btnPlayVisual.removeClass('fa-pause');
+					$btnPlayVisual.addClass('fa-play');				
+				}
+			}
+
+			function updateVolumeBar(volume) {
+				if(volume != undefined)
+				$ctrlVolume.val(volume);
+			}
+		});
 	});
 	</script>
 </body>

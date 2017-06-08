@@ -244,11 +244,6 @@ app.get('/pause', function(req, res, next){
 	res.redirect('/');
 });
 
-app.get('/next', function(req, res, next){
-	handleCommand ({ cmd: 'next' });
-	res.redirect('/');
-});
-
 app.get('/stream', function(req, res){
 	var rstream = fs.createReadStream(currentFile);
 	rstream.pipe(res);	
@@ -256,11 +251,12 @@ app.get('/stream', function(req, res){
 
 
 io.on('connection', function (socket) {
-	console.log('client connected: ');
-	console.log(socket.request.connection.remoteAddress);
+	var fp = socket.handshake.query.fp;
+	console.log('client connected: ' + fp);
 	sendPlaylistUpdate(socket);
 	sendPlayerStatus();
 	socket.on('command', (data) => {
+		data.fp = fp;
 		handleCommand (data);
 	});
 });
