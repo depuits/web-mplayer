@@ -48,12 +48,15 @@ player.on('started', () => {
 	console.log('started: sb - ' + soundBitInfo.isActive);
 	if(soundBitInfo.isActive) {
 		if(soundBitInfo.isStarted) {
+			// the sound bit was started so this must be the song that continues
 			player.goToPosition(soundBitInfo.prevTime);
+			player.volume(soundBitInfo.prevVolume);
 			soundBitInfo.isActive = false;
 			if(soundBitInfo.wasPaused) {
 				player.pause();
 			}
 		} else {
+			// the sound bit isn't started yet so make sure it plays
 			player.play();
 			soundBitInfo.isStarted = true;
 		}
@@ -68,13 +71,16 @@ player.on('stopped', () => {
 		console.log('of: ' + currentFile);
 		console.log(soundBitInfo);
 
+		// when the soundbit stopped, we resume the original song
 		player.loadFile(currentFile);
-		player.volume(soundBitInfo.prevVolume);
 	} else {
+		// if no sound bit was playing then the song ended
 		if (nextTimoutVar) {
+			// if we were going to next we clear it
 			clearTimeout(nextTimoutVar);
 			nextTimoutVar = undefined;
 		}
+		// and we'll hop along our playlist
 		progressPlayList(playlist);
 	}
 });
@@ -144,6 +150,11 @@ function progressPlayList(playlist) {
 }
 
 function playBit(bit) {
+	// we can't play 2 bits at once
+	if(soundBitInfo.isActive) {
+		return;
+	}
+	
 	var file = __dirname + '/soundbits/' + bit;
 
 	player.getProperty('time-pos').then(function(t) {
@@ -245,6 +256,8 @@ app.get('/stream', function(req, res){
 
 
 io.on('connection', function (socket) {
+	console.log('client connected: ');
+	console.log(socket.request.connection.remoteAddress);
 	sendPlaylistUpdate(socket);
 	sendPlayerStatus();
 	socket.on('command', (data) => {
