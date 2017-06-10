@@ -19,16 +19,20 @@ ctrl.player.on('statuschange', (stat) => {
 	}
 });
 
+ctrl.playlist.on('updated', () => {
+	sendPlaylistUpdate();
+});
+
 function handleCommand(data) {
 	switch(data.cmd) {
 		case 'togglePlay':
-			ctrl.player.togglePause ();
+			ctrl.player.togglePause();
 			break;
 		case 'play':
-			ctrl.player.play ();
+			ctrl.player.play();
 			break;
 		case 'pause':
-			ctrl.player.pause ();
+			ctrl.player.pause();
 			break;
 		case 'next':
 			ctrl.next();
@@ -48,11 +52,7 @@ function handleCommand(data) {
 function sendPlaylistUpdate(socket) {
 	socket = socket || io;
 	//TODO we should filter the playlist to not send the complete file path
-	socket.emit('playlist', { 
-		current: currentFile, 
-		requestlist: requestlist, 
-		playlist: playlist 
-	});
+	socket.emit('playlist', ctrl.playlist.get());
 }
 
 function sendPlayerStatus(socket) {
@@ -69,19 +69,10 @@ app.get('/playlist', function(req, res, next){
 	res.status(200).json(playlist);
 });
 
-app.get('/togglePlay', function(req, res, next){
-	handleCommand ({ cmd: 'togglePlay' });
+app.get('/:cmd', function(req, res, next){
+	handleCommand ({ cmd: req.params.cmd }); //TODO replace witch cmd endpoint and parse body
 	res.redirect('/');
 });
-app.get('/play', function(req, res, next){
-	handleCommand ({ cmd: 'play' });
-	res.redirect('/');
-});
-app.get('/pause', function(req, res, next){
-	handleCommand ({ cmd: 'pause' });
-	res.redirect('/');
-});
-
 
 io.on('connection', function (socket) {
 	var fp = socket.handshake.query.fp;
