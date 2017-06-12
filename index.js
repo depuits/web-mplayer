@@ -3,7 +3,7 @@
 var config = require('config');
 var express = require('express');
 
-var ctrl = require('lib/controller');
+var ctrl = require('./lib/controller');
 
 var app = express();
 var server = require('http').Server(app);
@@ -11,12 +11,8 @@ var io = require('socket.io')(server);
 
 var port = config.get('port');
 
-ctrl.player.on('statuschange', (stat) => {
-	//only send the status update if we are not playing a soundbit
-	// so the clients don't see irrelevant update (eg. volume, duration, current, ...)
-	if(!soundBitInfo.isActive) {
-		sendPlayerStatus();
-	}
+ctrl.on('statuschange', (stat) => {
+	sendPlayerStatus();
 });
 
 ctrl.playlist.on('updated', () => {
@@ -44,7 +40,7 @@ function handleCommand(data) {
 			ctrl.player.volume(data.value);
 			break;
 		case 'playBit':
-			ctrl.playBit(data.file);
+			ctrl.soundbit.play(data.file);
 			break;
 	}
 }
@@ -57,16 +53,13 @@ function sendPlaylistUpdate(socket) {
 
 function sendPlayerStatus(socket) {
 	socket = socket || io;
-	socket.emit('status', {
-		playing: !ctrl.player.observed.pause,
-		volume: ctrl.player.observed.volume
-	});
+	socket.emit('status', ctrl.status);
 }
 
 app.use(express.static("public"));
 
 app.get('/playlist', function(req, res, next){
-	res.status(200).json(playlist);
+	res.status(200).json(ctrl.playlist.get());
 });
 
 app.get('/:cmd', function(req, res, next){

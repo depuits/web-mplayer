@@ -1,3 +1,5 @@
+var path = require('path');
+
 var config = {
 	port: 3003,
 	musicDir: 'D:/data/music',
@@ -12,6 +14,7 @@ var config = {
 	],
 	playlistSize: 20,
 	nextDelay: 10000,
+	soundBitDir: path.join(__dirname, '..', 'soundbits'),
 	soundBitVolume: 100
 };
 
