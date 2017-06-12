@@ -2,7 +2,7 @@
   "name": "web-mplayer",
   "version": "1.0.0",
   "description": "Music player with web interface",
-  "main": "index.js",  
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/depuits/web-mplayer.git"
@@ -14,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.17.2",
     "config": "^1.26.1",
     "express": "^4.15.3",
     "node-mpv": "^1.0.3",
