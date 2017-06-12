@@ -84,7 +84,7 @@ app.get('/:cmd', function(req, res, next){
 });
 
 io.on('connection', function (socket) {
-	var fp = socket.handshake.query.fp; //socket.request.connection.remoteAddress;
+	var fp = /*socket.handshake.query.fp; //*/socket.request.connection.remoteAddress;
 	// if this client does not already have another socket open then its a new one
 	// clients using the rest api are not counted towards active clients
 	var clSockets = clients.get(fp);
