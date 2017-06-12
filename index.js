@@ -73,7 +73,8 @@ app.use(express.static("public"));
 app.get('/playlist', function(req, res, next){
 	res.status(200).json(ctrl.playlist.get());
 });
-app.get('/cmd', function(req, res, next){
+app.post('/cmd', function(req, res, next){
+	console.log('received request');
 	req.body.fp = req.ip;
 	handleCommand (req.body);
 	res.redirect('/');
