@@ -45,6 +45,12 @@
 				<input type="range" min="0" max="100" class="js-ctrl-volume" />
 			</div>
 		</div>
+		
+		<div class="row justify-content-center">
+			<div class="text-center" style="width: 160px; height: 160px;">
+				<canvas id="votesChart"></canvas>
+			</div>
+		</div>
 
 		<table class="table text-center">
 			<tbody id="currentSong">
@@ -81,9 +87,23 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/fingerprintjs2/1.5.1/fingerprint2.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
 	<script>
 	new Fingerprint2().get(function(finger){
 		$(document).ready(function () {
+			var ctx = document.getElementById("votesChart").getContext('2d');
+			var votesChart = new Chart(ctx, {
+				type: 'polarArea',
+				data: {
+					datasets: [{ 
+						data: [0, 0, 0] ,
+						backgroundColor: ['rgba(201,203,207,0.75)', 'rgba(255,99,132,0.75)', 'rgba(75,192,192,0.75)']
+					}],
+					labels: [ 'No vote', 'Next', 'Veto' ]
+				},
+				options: { legend: { display: false } }
+			});
+		
 			var $currentSong = $('#currentSong');
 			var $currentSongTitle = $currentSong.find('.js-pl-title');
 			var $currentSongArtist = $currentSong.find('.js-pl-artist');
@@ -110,7 +130,7 @@
 				updateVolumeBar(status.volume);
 			});
 			socket.on('votes', function(votes) {
-				console.log(votes);
+				updateVotesChart(votes);
 			});
 
 			$('.js-ctrl-play').click(function() { 
@@ -186,6 +206,15 @@
 			function updateVolumeBar(volume) {
 				if(volume != undefined)
 				$ctrlVolume.val(volume);
+			}
+			
+			function updateVotesChart(votes) {
+				var data = votesChart.data.datasets[0].data;
+				data[0] = votes.all - (votes.next + votes.veto);
+				data[1] = votes.next;
+				data[2] = votes.veto;
+
+				votesChart.update();
 			}
 		});
 	});
