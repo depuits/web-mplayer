@@ -12,10 +12,11 @@ var config = {
 		'.m4a',
 		'.flac'
 	],
-	playlistSize: 20,
-	nextDelay: 10000,
+	db: 'mongodb://localhost:27017/musiclib',
 	soundBitDir: path.join(__dirname, '..', 'soundbits'),
-	soundBitVolume: 100
+	soundBitVolume: 100,
+	playlistSize: 20,
+	nextDelay: 10000
 };
 
 module.exports = config;
