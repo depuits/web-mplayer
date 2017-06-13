@@ -23,9 +23,7 @@ ctrl.playlist.on('updated', () => {
 	sendPlaylistUpdate();
 });
 
-function handleCommand(data) {
-	console.log('fp: ' + data.fp);
-	
+function handleCommand(data) {	
 	switch(data.cmd) {
 		case 'togglePlay':
 			ctrl.player.togglePause();
@@ -63,7 +61,6 @@ function sendVoteStatus(socket) {
 }
 function sendPlaylistUpdate(socket) {
 	socket = socket || io;
-	//TODO we should filter the playlist to not send the complete file path
 	socket.emit('playlist', ctrl.playlist.get());
 }
 
@@ -74,7 +71,6 @@ app.get('/playlist', function(req, res, next){
 	res.status(200).json(ctrl.playlist.get());
 });
 app.post('/cmd', function(req, res, next){
-	console.log('received request');
 	req.body.fp = req.ip;
 	handleCommand (req.body);
 	res.redirect('/');
@@ -85,7 +81,7 @@ app.get('/:cmd', function(req, res, next){
 });
 
 io.on('connection', function (socket) {
-	var fp = /*socket.handshake.query.fp; //*/socket.request.connection.remoteAddress;
+	var fp = socket.request.connection.remoteAddress;
 	// if this client does not already have another socket open then its a new one
 	// clients using the rest api are not counted towards active clients
 	var clSockets = clients.get(fp);
@@ -98,9 +94,12 @@ io.on('connection', function (socket) {
 	
 	clSockets.push(socket);
 	
+	// send the current player data to this socket
 	sendPlaylistUpdate(socket);
 	sendPlayerStatus(socket);
 	sendVoteStatus(socket);
+	
+	// handle socket events
 	socket.on('command', (data) => {
 		data.fp = fp;
 		handleCommand (data);
@@ -125,6 +124,7 @@ server.listen(port, () => {
 	console.log('App listening on port ' + port);
 });
 
+// start the player
 ctrl.init();
 
 exports.app = app;

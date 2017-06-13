@@ -30,27 +30,31 @@
     </nav>
 
 	<div class="container main">
-		<div class="row justify-content-center">
-			<div class="col-6 text-center">
-				<div class="btn-group" role="group" aria-label="Controls">
-					<button type="button" class="btn btn-secondary js-ctrl-play"><i class="fa fa-pause js-ctrl-play-visual" aria-hidden="true"></i></button>
-					<button type="button" class="btn btn-secondary js-ctrl-next"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
-					<button type="button" class="btn btn-secondary js-ctrl-veto">Veto</button>
+		<div class="row justify-content-center align-items-center">
+			<div class="col-8">
+				<div class="row">
+					<div class="col-12 text-right">
+						<div class="btn-group" role="group" aria-label="Controls">
+							<button type="button" class="btn btn-secondary js-ctrl-play"><i class="fa fa-pause js-ctrl-play-visual" aria-hidden="true"></i></button>
+							<button type="button" class="btn btn-secondary js-ctrl-next"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
+							<button type="button" class="btn btn-secondary js-ctrl-veto">Veto</button>
+						</div>
+					</div>
+				</div>
+				<div class="row">
+					<div class="col-12 text-right">
+						<input type="range" min="0" max="100" class="js-ctrl-volume">
+					</div>
+				</div>
+			</div>
+				
+			<div class="col-4 text-left">
+				<div style="width: 160px; height: 160px;">
+					<canvas id="votesChart"></canvas>
 				</div>
 			</div>
 		</div>
 		
-		<div class="row justify-content-center">
-			<div class="col-6 text-center">
-				<input type="range" min="0" max="100" class="js-ctrl-volume" />
-			</div>
-		</div>
-		
-		<div class="row justify-content-center">
-			<div class="text-center" style="width: 160px; height: 160px;">
-				<canvas id="votesChart"></canvas>
-			</div>
-		</div>
 
 		<table class="table text-center">
 			<tbody id="currentSong">
@@ -86,144 +90,141 @@
 	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/fingerprintjs2/1.5.1/fingerprint2.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
 	<script>
-	new Fingerprint2().get(function(finger){
-		$(document).ready(function () {
-			var ctx = document.getElementById("votesChart").getContext('2d');
-			var votesChart = new Chart(ctx, {
-				type: 'polarArea',
-				data: {
-					datasets: [{ 
-						data: [0, 0, 0] ,
-						backgroundColor: ['rgba(201,203,207,0.75)', 'rgba(255,99,132,0.75)', 'rgba(75,192,192,0.75)'],
-						borderColor: ['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.25)', 'rgba(255,255,255,0.25)']
-					}],
-					labels: [ 'No vote', 'Next', 'Veto' ]
-				},
-				options: { 
-					layout: { padding: 8 },
-					legend: { display: false },
-					scale: { ticks: { stepSize: 1 } }
-				}
-			});
-		
-			var $currentSong = $('#currentSong');
-			var $currentSongTitle = $currentSong.find('.js-pl-title');
-			var $currentSongArtist = $currentSong.find('.js-pl-artist');
-
-			var $playlistItemTemplate = $('#playlistItemTemplate');
-			var $requestlist = $('#requestlist');
-			var $playlist = $('#playlist');
-
-			var $btnPlayVisual = $('.js-ctrl-play-visual');
-			var $ctrlVolume = $('.js-ctrl-volume');
-
-			var socket = io.connect({ query: 'fp=' + finger });
-			socket.on('playlist', function(data) {
-				//update current song
-				updateCurrent(data.current);
-
-				// update requests and playlist
-				//TODO update dom without rebuilding complete playlist
-				updatePlaylist($requestlist, data.requestlist, 'R');
-				updatePlaylist($playlist, data.playlist);			
-			});
-			socket.on('status', function(status) {
-				updatePlayButton(status.playing);
-				updateVolumeBar(status.volume);
-			});
-			socket.on('votes', function(votes) {
-				updateVotesChart(votes);
-			});
-
-			$('.js-ctrl-play').click(function() { 
-				socket.emit('command', { cmd: 'togglePlay' });
-				return false;
-			});
-			$('.js-ctrl-next').click(function() { 
-				socket.emit('command', { cmd: 'next' });
-				return false;
-			});
-			$('.js-ctrl-veto').click(function() { 
-				socket.emit('command', { cmd: 'veto' });
-				return false;
-			});
-
-			$('.js-ctrl-dinner').click(function() {
-				socket.emit('command', { cmd: 'playBit', file: 'dinner.mp3' });
-				return false;
-			});
-
-			$ctrlVolume.change(function() {
-				var vol = $(this).val();
-				socket.emit('command', { cmd: 'volume', value: vol });
-				return false;
-			});
-			
-			function updateCurrent(current) {
-				var cur = current.substr(current.lastIndexOf('/') + 1);
-				$currentSongTitle.text(cur);
-				$currentSongArtist.text(''); // TODO
-
-				document.title = 'MPlayer: ' + cur;
-			}
-
-			function updatePlaylist($listEl, list, id) {
-				//clear the previous list
-				$listEl.empty();
-
-				// loop all items in the list and add them to the element
-				for (var i = 0; i < list.length; ++i) {
-					var current = list[i];
-					var title = current.substr(current.lastIndexOf('/') + 1);
-					var artist = ''; //TODO
-
-					var newTxt = $playlistItemTemplate.text();
-					var $newElem = $(newTxt);
-
-					$newElem.find('.js-pl-id').text(id || (i + 1));
-					var $title = $newElem.find('.js-pl-title');	
-					var $artist = $newElem.find('.js-pl-artist');
-					$title.text(title);
-					if(artist) {
-						$artist.text(artist);
-					} else {
-						$title.attr('colspan', 2);
-						$artist.remove();
-					}
-
-					$listEl.append($newElem);
-				}
-			}
-
-			function updatePlayButton(playing) {
-				if(playing) {
-					$btnPlayVisual.removeClass('fa-play');
-					$btnPlayVisual.addClass('fa-pause');
-				} else {
-					$btnPlayVisual.removeClass('fa-pause');
-					$btnPlayVisual.addClass('fa-play');				
-				}
-			}
-
-			function updateVolumeBar(volume) {
-				if(volume != undefined)
-				$ctrlVolume.val(volume);
-			}
-			
-			function updateVotesChart(votes) {
-				votesChart.options.scale.ticks.max = votes.all;
-			
-				var data = votesChart.data.datasets[0].data;
-				data[0] = votes.all - (votes.next + votes.veto);
-				data[1] = votes.next;
-				data[2] = votes.veto;
-
-				votesChart.update();
+	$(document).ready(function () {
+		var ctx = document.getElementById("votesChart").getContext('2d');
+		var votesChart = new Chart(ctx, {
+			type: 'polarArea',
+			data: {
+				datasets: [{ 
+					data: [0, 0, 0] ,
+					backgroundColor: ['rgba(201,203,207,0.75)', 'rgba(255,99,132,0.75)', 'rgba(75,192,192,0.75)'],
+					borderColor: ['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.25)', 'rgba(255,255,255,0.25)']
+				}],
+				labels: [ 'No vote', 'Next', 'Veto' ]
+			},
+			options: { 
+				layout: { padding: 8 },
+				legend: { display: false },
+				scale: { ticks: { stepSize: 1 } }
 			}
 		});
+	
+		var $currentSong = $('#currentSong');
+		var $currentSongTitle = $currentSong.find('.js-pl-title');
+		var $currentSongArtist = $currentSong.find('.js-pl-artist');
+
+		var $playlistItemTemplate = $('#playlistItemTemplate');
+		var $requestlist = $('#requestlist');
+		var $playlist = $('#playlist');
+
+		var $btnPlayVisual = $('.js-ctrl-play-visual');
+		var $ctrlVolume = $('.js-ctrl-volume');
+
+		var socket = io.connect();
+		socket.on('playlist', function(data) {
+			//update current song
+			updateCurrent(data.current);
+
+			// update requests and playlist
+			//TODO update dom without rebuilding complete playlist
+			updatePlaylist($requestlist, data.requestlist, 'R');
+			updatePlaylist($playlist, data.playlist);			
+		});
+		socket.on('status', function(status) {
+			updatePlayButton(status.playing);
+			updateVolumeBar(status.volume);
+		});
+		socket.on('votes', function(votes) {
+			updateVotesChart(votes);
+		});
+
+		$('.js-ctrl-play').click(function() { 
+			socket.emit('command', { cmd: 'togglePlay' });
+			return false;
+		});
+		$('.js-ctrl-next').click(function() { 
+			socket.emit('command', { cmd: 'next' });
+			return false;
+		});
+		$('.js-ctrl-veto').click(function() { 
+			socket.emit('command', { cmd: 'veto' });
+			return false;
+		});
+
+		$('.js-ctrl-dinner').click(function() {
+			socket.emit('command', { cmd: 'playBit', file: 'dinner.mp3' });
+			return false;
+		});
+
+		$ctrlVolume.change(function() {
+			var vol = $(this).val();
+			socket.emit('command', { cmd: 'volume', value: vol });
+			return false;
+		});
+		
+		function updateCurrent(current) {
+			var cur = current.substr(current.lastIndexOf('/') + 1);
+			$currentSongTitle.text(cur);
+			$currentSongArtist.text(''); // TODO
+
+			document.title = 'MPlayer: ' + cur;
+		}
+
+		function updatePlaylist($listEl, list, id) {
+			//clear the previous list
+			$listEl.empty();
+
+			// loop all items in the list and add them to the element
+			for (var i = 0; i < list.length; ++i) {
+				var current = list[i];
+				var title = current.substr(current.lastIndexOf('/') + 1);
+				var artist = ''; //TODO
+
+				var newTxt = $playlistItemTemplate.text();
+				var $newElem = $(newTxt);
+
+				$newElem.find('.js-pl-id').text(id || (i + 1));
+				var $title = $newElem.find('.js-pl-title');	
+				var $artist = $newElem.find('.js-pl-artist');
+				$title.text(title);
+				if(artist) {
+					$artist.text(artist);
+				} else {
+					$title.attr('colspan', 2);
+					$artist.remove();
+				}
+
+				$listEl.append($newElem);
+			}
+		}
+
+		function updatePlayButton(playing) {
+			if(playing) {
+				$btnPlayVisual.removeClass('fa-play');
+				$btnPlayVisual.addClass('fa-pause');
+			} else {
+				$btnPlayVisual.removeClass('fa-pause');
+				$btnPlayVisual.addClass('fa-play');				
+			}
+		}
+
+		function updateVolumeBar(volume) {
+			if(volume != undefined)
+			$ctrlVolume.val(volume);
+		}
+		
+		function updateVotesChart(votes) {
+			votesChart.options.scale.ticks.max = votes.all;
+		
+			var data = votesChart.data.datasets[0].data;
+			data[0] = votes.all - (votes.next + votes.veto);
+			data[1] = votes.next;
+			data[2] = votes.veto;
+
+			votesChart.update();
+		}
 	});
 	</script>
 </body>
