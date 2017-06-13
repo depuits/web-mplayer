@@ -1,0 +1,29 @@
+html {
+	position: relative;
+	min-height: 100%;
+}
+.main {
+	padding-top: 24px;
+	padding-bottom: 24px;
+}
+.main div[class^="col"] {
+	padding-top: 16px;
+	padding-bottom: 16px;
+}
+
+#timeProgressbar {
+	height: 2em;
+	position: relative;
+}
+#timeProgressbar .progress {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	left: 0;
+}
+#timeProgressbar .progress-bar {
+	height: 1px;
+}
+#timeProgressbar:hover .progress-bar {
+	height: 100%;
+}
