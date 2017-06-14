@@ -71,6 +71,21 @@ app.use(express.static("public"));
 app.get('/playlist', function(req, res, next){
 	res.status(200).json(ctrl.playlist.get());
 });
+
+app.get('/update', function(req, res, next){
+	ctrl.audiolib.update();
+	res.status(200).json({});
+});
+
+app.get('/find', function(req, res, next){
+	ctrl.audiolib.find(req.query.s, (err, items) => {
+		res.status(200).json({
+			items: items,
+			err: err
+		});
+	});
+});
+
 app.post('/cmd', function(req, res, next){
 	req.body.fp = req.ip;
 	handleCommand (req.body);
