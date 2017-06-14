@@ -170,11 +170,13 @@
 		});
 		
 		function updateCurrent(current) {
-			var cur = current.substr(current.lastIndexOf('/') + 1);
-			$currentSongTitle.text(cur);
-			$currentSongArtist.text(''); // TODO
-
-			document.title = 'MPlayer: ' + cur;
+			$currentSongTitle.text(current.title);
+			$currentSongArtist.text(current.artist);
+			
+			document.title = 'MPlayer: ' + current.title;
+			if(current.artist) {
+				document.title += ' - ' + current.artist;
+			}
 		}
 		function updatePlaylist($listEl, list, id) {
 			//clear the previous list
@@ -183,8 +185,8 @@
 			// loop all items in the list and add them to the element
 			for (var i = 0; i < list.length; ++i) {
 				var current = list[i];
-				var title = current.substr(current.lastIndexOf('/') + 1);
-				var artist = ''; //TODO
+				var title = current.title;
+				var artist = current.artist;
 
 				var newTxt = $playlistItemTemplate.text();
 				var $newElem = $(newTxt);
