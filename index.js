@@ -5,7 +5,6 @@ var express = require('express');
 var bodyParser = require("body-parser");
 
 var ctrl = require('./lib/controller');
-var mongo = require('./lib/mongo');
 
 var app = express();
 var server = require('http').Server(app);
@@ -144,15 +143,8 @@ server.listen(port, () => {
 	console.log('App listening on port ' + port);
 });
 
-// initialize db connection
-mongo.connect((err) => {
-	if (err) {
-		console.log(err);
-		process.exit();
-	}
-	// start the player
-	ctrl.init();
-});
+// start the player
+ctrl.init();
 
 exports.app = app;
 exports.server = server;
