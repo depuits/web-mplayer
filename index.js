@@ -92,7 +92,8 @@ app.post('/cmd', function(req, res, next){
 	res.redirect('/');
 });
 app.get('/:cmd', function(req, res, next){
-	handleCommand ({ cmd: req.params.cmd, fp: req.ip });
+	var data = Object.assign({}, req.query, { cmd: req.params.cmd, fp: req.ip });
+	handleCommand (data);
 	res.redirect('/');
 });
 
