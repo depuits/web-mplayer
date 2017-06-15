@@ -2,7 +2,7 @@ var path = require('path');
 
 var config = {
 	port: 3003,
-	musicDir: 'D:/data/music',
+	musicDir: '',
 	extensions: [ 
 		'.aac',
 		'.ac3',
