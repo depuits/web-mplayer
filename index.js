@@ -47,6 +47,9 @@ function handleCommand(data) {
 		case 'playBit':
 			ctrl.soundbit.play(data.file);
 			break;
+		case 'request':
+			ctrl.playlist.request(data.id);
+			break;
 	}
 }
 
