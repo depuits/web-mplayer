@@ -94,7 +94,7 @@
 				</div>
 				<div class="modal-body">
 					<form class="input-group" id="formSearch">
-						<input type="search" class="form-control" placeholder="Search..." />
+						<input type="search" class="form-control" id="searchInput" placeholder="Search..." />
 						<div class="input-group-btn">
 							<button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
 						</div>
@@ -169,6 +169,8 @@
 		var $timeTotal = $('.js-time-total');
 		var timerId = undefined;
 
+		var $searchInput = $('#searchInput');
+		
 		var socket = io.connect();
 		socket.on('playlist', function(data) {
 			//update current song
@@ -211,6 +213,14 @@
 
 		$('.js-ctrl-dinner').click(function() {
 			socket.emit('command', { cmd: 'playBit', file: 'dinner.mp3' });
+			return false;
+		});
+		
+		$('#formSearch').submit(function() {
+			var s = $searchInput.val();
+			$.get('find?s=' + s, function(data) {
+				console.log(data);
+			});
 			return false;
 		});
 
