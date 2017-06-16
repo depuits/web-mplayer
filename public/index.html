@@ -220,9 +220,11 @@
 			var s = $searchInput.val();
 			$.get('find?s=' + s, function(data) {
 				updatePlaylist($resultlist, data, $resultItemTemplate, function($el) {
-					//TODO bind button
-				});	
-				console.log(data);
+					$el.find('button').click(function() {
+						var id = $el.data('id');
+						socket.emit('command', { cmd: 'request', id: id });	
+					});
+				});
 			});
 			return false;
 		});
