@@ -107,17 +107,7 @@
 								<th>Artist</th>
 							</tr>
 						</thead>
-						<tbody id="resultlist">
-							<tr>
-								<td class="w-50 js-pl-title">Title</td>
-								<td class="w-50 js-pl-artist">artist</td>
-								<td><button class="btn btn-default" type="submit"><i class="fa fa-plus"></i></button></td>
-							</tr>
-							<tr>
-								<td class="w-50 js-pl-title">Title</td>
-								<td class="w-50 js-pl-artist">artist</td>
-								<td><button class="btn btn-default" type="submit"><i class="fa fa-plus"></i></button></td>
-							</tr>
+						<tbody id="resultlist"><tr>
 						</tbody>
 					</table>
 				</div>
@@ -128,6 +118,14 @@
 		</div>
 	</div>
 
+	<script type="text/html" id="resultItemTemplate">	
+		<tr>
+			<td class="js-pl-title"></td>
+			<td class="js-pl-artist"></td>
+			<td class="w-0"><button class="btn btn-default" type="button"><i class="fa fa-plus"></i></button></td>
+		</tr>
+	</script>
+	
 	<script src="/socket.io/socket.io.js"></script>
 	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
@@ -259,10 +257,11 @@
 				if(artist) {
 					$artist.text(artist);
 				} else {
-					$title.attr('colspan', 2);
+					$title.prop('colspan', 2);
 					$artist.remove();
 				}
-
+				
+				$newElem.prop('title', current.relPath);
 				$listEl.append($newElem);
 			}
 		}
