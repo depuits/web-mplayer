@@ -21,9 +21,36 @@ html {
 	right: 0;
 	left: 0;
 }
-#timeProgressbar .progress-bar {
+#timeProgressbar .progress * {
 	height: 1px;
 }
-#timeProgressbar:hover .progress-bar {
+#timeProgressbar:hover  .progress  * {
 	height: 100%;
+}
+
+#timeProgressbar .sidenotes {
+	display: none;
+}
+#timeProgressbar:hover .sidenotes {
+	display: block;
+}
+.sidenotes {
+	position: absolute;
+	left: -8px;
+	right: -8px;
+	top: 0;
+	bottom: 0;
+}
+.sidenotes .sidenote {
+	position: absolute;
+	width: 24px;
+	bottom: 0;
+}
+.sidenotes .sidenote.sidenote-left {
+	left: -24px;
+	text-align: right;
+}
+.sidenotes .sidenote.sidenote-right {
+	right: -24px;
+	text-align: left;
 }
