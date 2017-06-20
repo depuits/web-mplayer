@@ -54,7 +54,6 @@
 
 		<table class="table text-center">
 			<tbody id="currentSong">
-				
 				<tr><td class="js-pl-title font-weight-bold"></td></tr>
 				<tr><td class="js-pl-artist"></td></tr>
 			</tbody>
@@ -243,6 +242,8 @@
 			if(current.artist) {
 				document.title += ' - ' + current.artist;
 			}
+
+			$currentSong.prop('title', current.path);
 		}
 		function updatePlaylist($listEl, list, $template, id, cb) {
 			if(typeof id === 'function') {
@@ -272,7 +273,7 @@
 					$artist.remove();
 				}
 				
-				$newElem.prop('title', current.relPath);
+				$newElem.prop('title', current.path);
 				$newElem.data('id', current._id);
 				$listEl.append($newElem);
 				
