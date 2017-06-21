@@ -86,13 +86,11 @@ app.get('/find', function(req, res, next){
 	});
 });
 app.get('/soundbits', function(req, res, next) {
-	ctrl.soundbit.list((err, items) => {
-		if(err) {
-			console.log(err);
-			res.status(500).end();
-		} else {
-			res.status(200).json(items);
-		}
+	ctrl.soundbit.list().then((items) => {
+		res.status(200).json(items);
+	}, (err) => {
+		console.log(err);
+		res.status(500).end();
 	});
 });
 

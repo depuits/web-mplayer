@@ -203,24 +203,23 @@
 
 		$.get('soundbits', function(data) { addSoundbitData(data); });
 		function addSoundbitData(data, indent) {
+			var i = 0;
 			indent = indent || 0;
-			if(typeof data !== 'object') {
-				return;
-			}
 			
 			var iStr = '';
-			for (var i = 0; i < indent; ++i) {
+			for (i = 0; i < indent; ++i) {
 				iStr += '&nbsp;&nbsp;&nbsp;&nbsp;';
 			}
 			
-			for (var p in data) {
-				var lbl = iStr + p;
-				if(typeof data[p] === 'string') {
-					$soundbitsSelect.append('<option value="' + data[p] + '">' +lbl + '</option>');
+			for (i = 0; i < data.length; ++i) {
+				var lbl = iStr + data[i].name;
+				var val = data[i].value;
+				if(typeof val === 'string') {
+					$soundbitsSelect.append('<option value="' + val + '">' +lbl + '</option>');
 				} else {
 					// add header and recursion
 					$soundbitsSelect.append('<optgroup label="' + lbl + '">');
-					addSoundbitData(data[p], indent + 1);
+					addSoundbitData(val, indent + 1);
 					$soundbitsSelect.append('</optgroup>');
 				}
 			}
