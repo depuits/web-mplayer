@@ -34,6 +34,7 @@ nextDelay     |Delay for actually skipping song       |number  |10000
 
 1. start mongodb
 2. start server: `npm start`
+
 before the first start you should fill the database by running `npm run scan`
 
   [1]: https://mpv.io/
