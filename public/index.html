@@ -71,7 +71,9 @@
 			<tbody id="playlist"></tbody>
 		</table>
 		<button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#requestModal">Request</button>
-		<button type="button" class="btn btn-secondary js-ctrl-dinner">Dinner</button>
+		<select class="custom-select js-soundbits">
+			<option value="" disabled selected hidden>Play soundbit</option>
+		</select>
 	</div>
 
 	<script type="text/html" id="playlistItemTemplate">
@@ -170,6 +172,8 @@
 		var $resultlist = $('#resultlist');
 		var $resultItemTemplate = $('#resultItemTemplate');
 		
+		var $soundbitsSelect = $('.js-soundbits');
+		
 		var socket = io.connect();
 		socket.on('playlist', function(data) {
 			//update current song
@@ -197,6 +201,38 @@
 			updateVotesChart(votes);
 		});
 
+		$.get('soundbits', function(data) { addSoundbitData(data); });
+		function addSoundbitData(data, indent) {
+			indent = indent || 0;
+			if(typeof data !== 'object') {
+				return;
+			}
+			
+			var iStr = '';
+			for (var i = 0; i < indent; ++i) {
+				iStr += '&nbsp;&nbsp;&nbsp;&nbsp;';
+			}
+			
+			for (var p in data) {
+				var lbl = iStr + p;
+				if(typeof data[p] === 'string') {
+					$soundbitsSelect.append('<option value="' + data[p] + '">' +lbl + '</option>');
+				} else {
+					// add header and recursion
+					$soundbitsSelect.append('<optgroup label="' + lbl + '">');
+					addSoundbitData(data[p], indent + 1);
+					$soundbitsSelect.append('</optgroup>');
+				}
+			}
+		}
+		
+		$soundbitsSelect.change(function() { 
+			// play the selection value
+			socket.emit('command', { cmd: 'playBit', file: $soundbitsSelect.val() });
+			// reset the selection to default
+			$soundbitsSelect.val('');
+		});
+		
 		$('.js-ctrl-play').click(function() { 
 			socket.emit('command', { cmd: 'togglePlay' });
 			return false;
@@ -207,11 +243,6 @@
 		});
 		$('.js-ctrl-veto').click(function() { 
 			socket.emit('command', { cmd: 'veto' });
-			return false;
-		});
-
-		$('.js-ctrl-dinner').click(function() {
-			socket.emit('command', { cmd: 'playBit', file: 'dinner.mp3' });
 			return false;
 		});
 		

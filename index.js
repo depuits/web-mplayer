@@ -24,8 +24,8 @@ ctrl.playlist.on('updated', () => {
 });
 
 function handleCommand(data) {	
-	switch(data.cmd) {
-		case 'togglePlay':
+	switch(data.cmd.toLowerCase()) {
+		case 'toggleplay':
 			ctrl.player.togglePause();
 			break;
 		case 'play':
@@ -43,7 +43,7 @@ function handleCommand(data) {
 		case 'volume':
 			ctrl.player.volume(data.value);
 			break;
-		case 'playBit':
+		case 'playbit':
 			ctrl.soundbit.play(data.file);
 			break;
 		case 'request':
@@ -79,6 +79,16 @@ app.get('/playlist', function(req, res, next){
 app.get('/find', function(req, res, next){
 	ctrl.audiolib.find(req.query.s, (err, items) => {
 		if(err) {
+			res.status(500).end();
+		} else {
+			res.status(200).json(items);
+		}
+	});
+});
+app.get('/soundbits', function(req, res, next) {
+	ctrl.soundbit.list((err, items) => {
+		if(err) {
+			console.log(err);
 			res.status(500).end();
 		} else {
 			res.status(200).json(items);
