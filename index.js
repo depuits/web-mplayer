@@ -77,22 +77,20 @@ app.get('/playlist', function(req, res, next){
 	res.status(200).json(ctrl.playlist.get());
 });
 app.get('/find', function(req, res, next){
-	ctrl.audiolib.find(req.query.s, (err, items) => {
-		if(err) {
-			res.status(500).end();
-		} else {
-			res.status(200).json(items);
-		}
-	});
+	handlePromiseReq(res, ctrl.audiolib.find(req.query.s));
 });
 app.get('/soundbits', function(req, res, next) {
-	ctrl.soundbit.list().then((items) => {
-		res.status(200).json(items);
+	handlePromiseReq(res, ctrl.soundbit.list());
+});
+
+function handlePromiseReq(res, prom) {
+	prom.then((result) => {
+		res.status(200).json(result);
 	}, (err) => {
 		console.log(err);
 		res.status(500).end();
 	});
-});
+}
 
 app.post('/cmd', function(req, res, next){
 	req.body.fp = req.ip;
