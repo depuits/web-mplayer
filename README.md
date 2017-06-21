@@ -11,8 +11,7 @@ The web interface can then be used to control the player from any device.
 # setup
 
 ## requirements
-[MPV][1]
-[Mongodb][2]
+[MPV][1] and [Mongodb][2]
 
 ## install
 `npm install`
@@ -35,6 +34,7 @@ nextDelay     |Delay for actually skipping song       |number  |10000
 
 1. start mongodb
 2. start server: `npm start`
+before the first start you should fill the database by running `npm run scan`
 
   [1]: https://mpv.io/
   [2]: https://www.mongodb.com/
