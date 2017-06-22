@@ -70,10 +70,18 @@
 			<tbody id="requestlist"></tbody>
 			<tbody id="playlist"></tbody>
 		</table>
-		<button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#requestModal">Request</button>
-		<select class="custom-select js-soundbits">
-			<option value="" disabled selected hidden>Play soundbit</option>
-		</select>
+		
+		<div class="row">
+			<div class="col">
+				<button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#requestModal">Request</button>
+				<select class="custom-select js-soundbits">
+					<option value="" disabled selected hidden>Play soundbit</option>
+				</select>
+			</div>
+			<div class="col text-right">
+				<button type="button" class="btn btn-secondary js-ctrl-scan">Update library <i class="fa fa-refresh" aria-hidden="true"></i></button>
+			</div>
+		</div>
 	</div>
 
 	<script type="text/html" id="playlistItemTemplate">
@@ -174,6 +182,9 @@
 		
 		var $soundbitsSelect = $('.js-soundbits');
 		
+		var $ctrlScan = $('.js-ctrl-scan');
+		var $ctrlScanVisual = $ctrlScan.find('i');
+		
 		var socket = io.connect();
 		socket.on('playlist', function(data) {
 			//update current song
@@ -188,6 +199,7 @@
 			updatePlayButton(status.playing);
 			updateVolumeBar(status.volume);
 			updateTime(status.time, status.duration);
+			updateScanVisual(status.scanning);
 			
 			//start or stop the timer according to the play state
 			if (status.playing && timerId === undefined) {
@@ -242,6 +254,10 @@
 		});
 		$('.js-ctrl-veto').click(function() { 
 			socket.emit('command', { cmd: 'veto' });
+			return false;
+		});
+		$ctrlScan.click(function() {
+			socket.emit('command', { cmd: 'scan' });
 			return false;
 		});
 		
@@ -352,6 +368,11 @@
 			var tMax = $progressbar.prop('aria-valuemax');
 			var tNow = $progressbar.prop('aria-valuenow') + 1;
 			updateTime(tNow, tMax);
+		}
+		
+		function updateScanVisual(scanning) {
+			$ctrlScan.prop('disabled', !!scanning);
+			$ctrlScanVisual.toggleClass('fa-spin', !!scanning);
 		}
 	});
 	</script>
