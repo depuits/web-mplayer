@@ -282,7 +282,7 @@
 		
 		function updateCurrent(current) {
 			$currentSongTitle.text(current.title);
-			$currentSongArtist.text(current.artist);
+			$currentSongArtist.text(current.artist || '');
 			
 			document.title = 'MPlayer: ' + current.title;
 			if(current.artist) {
