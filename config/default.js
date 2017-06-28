@@ -3,6 +3,7 @@ var path = require('path');
 var config = {
 	port: 3003,
 	musicDir: '',
+	blacklist: [],
 	extensions: [ 
 		'.aac',
 		'.ac3',

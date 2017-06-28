@@ -23,7 +23,8 @@ Option        |Description                            |Type    |Default
 --------------|---------------------------------------|--------|-------
 port          |Port on which the web service runs     |int     |3003
 musicDir      |Directory to scan for music            |string  |
-extensions    |Extensions of files to include         |string[]|'.aac','.ac3','.mp3','.wav','.wma','.m4a','.flac'
+blacklist     |Directories to skip scans (use / and relative paths)|string[]|[]
+extensions    |Extensions of files to include         |string[]|['.aac','.ac3','.mp3','.wav','.wma','.m4a','.flac']
 db            |Database connection string             |string  |'mongodb://localhost:27017/musiclib'
 soundBitDir   |Sound bit directory                    |string  |./soundbits
 soundBitVolume|Volume for playing soundbits           |int     |100     

@@ -50,7 +50,7 @@ function handleCommand(data) {
 			ctrl.playlist.request(data.id);
 			break;
 		case 'scan':
-			ctrl.audiolib.update().then((data) => {
+			ctrl.audiolib.update().finally(() => {
 				// send the player status if the scan ended
 				sendPlayerStatus();
 			});

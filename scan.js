@@ -10,6 +10,7 @@ mongo.connect().then(() => {
 	console.log('Scanned ' + data.length + ' items.');
 	process.exit();
 }).catch((err) => {
+	console.log('Error:');
 	console.log(err);
 	process.exit();
 });
