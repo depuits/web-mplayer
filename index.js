@@ -53,6 +53,9 @@ function handleCommand(data) {
 			ctrl.audiolib.update().finally(() => {
 				// send the player status if the scan ended
 				sendPlayerStatus();
+			}).catch((err) => {
+				console.log('Error occured during scan:');
+				console.log(err);
 			});
 			// send the player status when the scan started
 			sendPlayerStatus();
