@@ -19,9 +19,9 @@
     "body-parser": "^1.17.2",
     "config": "^1.26.1",
     "express": "^4.15.3",
-    "mongodb": "^2.2.28",
-    "music-metadata": "^0.6.3",
-    "node-mpv": "^1.0.3",
+    "mongodb": "^2.2.29",
+    "music-metadata": "^0.7.2",
+    "node-mpv": "^1.2.0",
     "socket.io": "^2.0.1"
   }
 }
