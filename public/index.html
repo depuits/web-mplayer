@@ -274,7 +274,7 @@
 			return false;
 		});
 
-		$ctrlVolume.change(function() {
+		$ctrlVolume.on('input change', function() {
 			var vol = $(this).val();
 			socket.emit('command', { cmd: 'volume', value: vol });
 			return false;
