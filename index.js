@@ -103,7 +103,7 @@ function handlePromiseReq(res, prom) {
 app.post('/cmd', function(req, res, next){
 	req.body.fp = req.ip;
 	handleCommand (req.body);
-	res.redirect('/');
+	res.status(204).end();
 });
 app.get('/:cmd', function(req, res, next){
 	var data = Object.assign({}, req.query, { cmd: req.params.cmd, fp: req.ip });
