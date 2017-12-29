@@ -11,7 +11,7 @@ The web interface can then be used to control the player from any device.
 # setup
 
 ## requirements
-[MPV][1] and [Mongodb][2]
+[MPV](https://mpv.io/) and [Mongodb](https://www.mongodb.com/)
 
 ## install
 `npm install`
@@ -25,7 +25,8 @@ port          |Port on which the web service runs     |int     |3003
 musicDir      |Directory to scan for music            |string  |
 blacklist     |Directories to skip scans (use / and relative paths)|string[]|[]
 extensions    |Extensions of files to include         |string[]|['.aac','.ac3','.mp3','.wav','.wma','.m4a','.flac']
-db            |Database connection string             |string  |'mongodb://localhost:27017/musiclib'
+dbUrl         |Database connection url                |string  |'mongodb://localhost:27017'
+dbName        |Database name                          |string  |'musiclib'
 soundBitDir   |Sound bit directory                    |string  |./soundbits
 soundBitVolume|Volume for playing soundbits           |int     |100     
 playlistSize  |Size of the randomly generated playlist|int     |20      
@@ -38,6 +39,4 @@ nextDelay     |Delay for actually skipping song       |number  |10000
 
 before the first start you should fill the database by running `npm run scan`
 
-  [1]: https://mpv.io/
-  [2]: https://www.mongodb.com/
-  
+![screenshot](screenshot.png?raw=true)

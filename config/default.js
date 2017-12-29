@@ -15,7 +15,8 @@ var config = {
 		'.m4a',
 		'.flac'
 	],
-	db: 'mongodb://localhost:27017/musiclib',
+	dbUrl: 'mongodb://localhost:27017',
+	dbName: 'musiclib',
 	soundBitDir: path.join(__dirname, '..', 'soundbits'),
 	soundBitVolume: 100,
 	playlistSize: 20,
