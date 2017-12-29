@@ -2,6 +2,14 @@ html {
 	position: relative;
 	min-height: 100%;
 }
+
+#uiLoading {
+	
+}
+#uiLoaded {
+	display: none;
+}
+
 .main {
 	padding-top: 24px;
 	padding-bottom: 24px;

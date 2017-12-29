@@ -16,7 +16,12 @@
 		<a class="navbar-brand" href="#">MPlayer</a>
     </nav>
 
-	<div class="container main">
+    <div id="uiLoading" class="container main">
+		<div class="row"><div class="col-12 text-center"><h1>Connecting</h1></div></div>
+		<div class="row"><div class="col-12 text-center"><i class="fa fa-spinner fa-pulse fa-5x" aria-hidden="true"></i></div></div>
+	</div>
+
+	<div id="uiLoaded" class="container main">
 		<div class="row">
 			<div class="col-md-4 col-12">
 			</div>
@@ -146,7 +151,10 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
 	<script>
 	$(document).ready(function () {
-		var ctx = document.getElementById("votesChart").getContext('2d');
+		var $uiLoading = $('#uiLoading');
+		var $uiLoaded = $('#uiLoaded');
+
+		var ctx = document.getElementById('votesChart').getContext('2d');
 		var votesChart = new Chart(ctx, {
 			type: 'polarArea',
 			data: {
@@ -190,6 +198,11 @@
 		var $ctrlScanVisual = $ctrlScan.find('i');
 		
 		var socket = io.connect();
+		socket.on('disconnect', function(){
+			//disable the ui
+			$uiLoading.show();
+			$uiLoaded.hide();
+		});
 		socket.on('playlist', function(data) {
 			//update current song
 			updateCurrent(data.current);
@@ -200,6 +213,10 @@
 			updatePlaylist($playlist, data.playlist, $playlistItemTemplate);
 		});
 		socket.on('status', function(status) {
+			//make sure the ui is enabled
+			$uiLoading.hide();
+			$uiLoaded.show();
+
 			updatePlayButton(status.playing);
 			updateVolumeBar(status.volume);
 			updateTime(status.time, status.duration);
