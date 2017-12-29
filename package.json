@@ -15,13 +15,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "bluebird": "^3.5.0",
-    "body-parser": "^1.17.2",
-    "config": "^1.26.1",
-    "express": "^4.15.3",
-    "mongodb": "^2.2.29",
-    "music-metadata": "^0.7.2",
-    "node-mpv": "^1.2.0",
-    "socket.io": "^2.0.1"
+    "bluebird": "^3.5.1",
+    "body-parser": "^1.18.2",
+    "config": "^1.29.0",
+    "express": "^4.16.2",
+    "mongodb": "^3.0.1",
+    "music-metadata": "^0.8.7",
+    "node-mpv": "^1.4.1",
+    "socket.io": "^2.0.4"
   }
 }
