@@ -20,7 +20,10 @@ var config = {
 	soundBitDir: path.join(__dirname, '..', 'soundbits'),
 	soundBitVolume: 100,
 	playlistSize: 20,
-	nextDelay: 10000
+	nextDelay: 10000,
+	mpd: {
+		port: 6600
+	}
 };
 
 module.exports = config;

@@ -158,6 +158,11 @@ server.listen(port, () => {
 // start the player
 ctrl.init();
 
+let mpdConf = config.get('mpd');
+if (mpdConf) {
+	exports.mpd = require('./lib/mpd')(mpdConf);
+}
+
 exports.app = app;
 exports.server = server;
 exports.io = io;
