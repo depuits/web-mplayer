@@ -20,6 +20,7 @@
     "config": "^1.29.0",
     "express": "^4.16.2",
     "mongodb": "^3.0.1",
+    "mpd-server": "git+https://github.com/depuits/mpd-server.git",
     "music-metadata": "^0.8.7",
     "node-mpv": "^1.4.1",
     "socket.io": "^2.0.4"
