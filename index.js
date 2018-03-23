@@ -160,6 +160,7 @@ ctrl.init();
 
 let mpdConf = config.get('mpd');
 if (mpdConf) {
+	//TODO add mpd clients to clients list
 	exports.mpd = require('./lib/mpd')(mpdConf);
 }
 
