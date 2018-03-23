@@ -1,17 +1,45 @@
 'use strict';
 
-var config = require('config');
-var express = require('express');
-var bodyParser = require("body-parser");
+let config = require('config');
+let express = require('express');
+let bodyParser = require("body-parser");
 
-var ctrl = require('./lib/controller');
+let ctrl = require('./lib/controller');
 
-var app = express();
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
+let app = express();
+let server = require('http').Server(app);
+let io = require('socket.io')(server);
 
-var port = config.get('port');
-var clients = new Map();
+let port = config.get('port');
+let clients = new Map();
+
+function connectClient(fp, socket) {	
+	// if this client does not already have another socket open then its a new one
+	// clients using the rest api are not counted towards active clients
+	let clSockets = clients.get(fp);
+	if(clSockets === undefined) {
+		clSockets = [];
+		clients.set(fp, clSockets);
+		console.log('client connected: ' + fp);
+		sendVoteStatus();
+	}
+	
+	clSockets.push(socket);
+}
+function disconnectClient(fp, socket) {
+	let clSockets = clients.get(fp);
+	let index = clSockets.indexOf(socket);
+	if (index > -1) {
+		clSockets.splice(index, 1);
+	}
+	
+	// if this is the last socket of this client then the client disconnected
+	if(clSockets.length === 0) {
+		clients.delete(fp);
+		console.log('client disconnected: ' + fp);
+		sendVoteStatus();
+	}
+}
 
 ctrl.on('statuschange', (stat) => {
 	sendPlayerStatus();
@@ -113,17 +141,7 @@ app.get('/:cmd', function(req, res, next){
 
 io.on('connection', function (socket) {
 	var fp = socket.request.connection.remoteAddress;
-	// if this client does not already have another socket open then its a new one
-	// clients using the rest api are not counted towards active clients
-	var clSockets = clients.get(fp);
-	if(clSockets === undefined) {
-		clSockets = [];
-		clients.set(fp, clSockets);
-		console.log('client connected: ' + fp);
-		sendVoteStatus();
-	}
-	
-	clSockets.push(socket);
+	connectClient(fp, socket);
 	
 	// send the current player data to this socket
 	sendPlaylistUpdate(socket);
@@ -136,17 +154,7 @@ io.on('connection', function (socket) {
 		handleCommand (data);
 	});
 	socket.on('disconnect', () => {
-		var index = clSockets.indexOf(socket);
-		if (index > -1) {
-			clSockets.splice(index, 1);
-		}
-		
-		// if this is the last socket of this client then the client disconnected
-		if(clSockets.length === 0) {
-			clients.delete(fp);
-			console.log('client disconnected: ' + fp);
-			sendVoteStatus();
-		}
+		disconnectClient(fp, socket);
 	});
 });
 
@@ -158,12 +166,23 @@ server.listen(port, () => {
 // start the player
 ctrl.init();
 
+let mpd = undefined;
 let mpdConf = config.get('mpd');
 if (mpdConf) {
 	//TODO add mpd clients to clients list
-	exports.mpd = require('./lib/mpd')(mpdConf);
+	mpd = require('./lib/mpd')(mpdConf);
+	mpd.on('connection', (con) => {
+		connectClient(con.socket.address().address, con);
+	});
+	mpd.on('disconnect', (con) => {
+		disconnectClient(con.socket.address().address, con);
+	});
 }
 
-exports.app = app;
-exports.server = server;
-exports.io = io;
+module.exports = {
+	app,
+	server,
+	io,
+	mpd,
+	clients
+}
