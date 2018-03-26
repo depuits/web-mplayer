@@ -169,9 +169,8 @@ ctrl.init();
 let mpd = undefined;
 let mpdConf = config.get('mpd');
 if (mpdConf) {
-	//TODO add mpd clients to clients list
 	mpd = require('./lib/mpd')(mpdConf);
-	mpd.on('connection', (con) => {
+	mpd.on('connect', (con) => {
 		connectClient(con.socket.address().address, con);
 	});
 	mpd.on('disconnect', (con) => {
