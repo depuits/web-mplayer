@@ -7,6 +7,7 @@ The web interface can then be used to control the player from any device.
 - request songs
 - vote on next or current song
 - play soundbits for small announcements
+- mpd implementation for other frontends
 
 # setup
 
@@ -31,6 +32,7 @@ soundBitDir   |Sound bit directory                    |string  |./soundbits
 soundBitVolume|Volume for playing soundbits           |int     |100     
 playlistSize  |Size of the randomly generated playlist|int     |20      
 nextDelay     |Delay for actually skipping song       |number  |10000   
+mpd           |Object with mpd config, this object is past to the [`listen`](https://github.com/depuits/mpd-server#methods) method of mpd-server |object  |{ port: 6600 }
 
 # usage
 
