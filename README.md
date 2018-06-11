@@ -12,7 +12,7 @@ The web interface can then be used to control the player from any device.
 # setup
 
 ## requirements
-[MPV](https://mpv.io/) and [Mongodb](https://www.mongodb.com/)
+[NodeJs](https://nodejs.org/), [MPV](https://mpv.io/) and [Mongodb](https://www.mongodb.com/)
 
 ## install
 `npm install`

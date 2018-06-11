@@ -6,11 +6,14 @@ let bodyParser = require("body-parser");
 
 let ctrl = require('./lib/controller');
 
+let port = config.get('port');
 let app = express();
 let server = require('http').Server(app);
 let io = require('socket.io')(server);
 
-let port = config.get('port');
+let mpd = undefined;
+let mpdConf = config.get('mpd');
+
 let clients = new Map();
 
 function connectClient(fp, socket) {	
@@ -158,25 +161,26 @@ io.on('connection', function (socket) {
 	});
 });
 
-// we first need to start up the web server
-server.listen(port, () => {
-	console.log('App listening on port ' + port);
-});
-
 // start the player
-ctrl.init();
+ctrl.init().then(() => {
+	//when the player is started, start up interfaces
+	server.listen(port, () => {
+		console.log('App listening on port ' + port);
+	});
 
-let mpd = undefined;
-let mpdConf = config.get('mpd');
-if (mpdConf) {
-	mpd = require('./lib/mpd')(mpdConf);
-	mpd.on('connect', (con) => {
-		connectClient(con.socket.address().address, con);
-	});
-	mpd.on('disconnect', (con) => {
-		disconnectClient(con.socket.address().address, con);
-	});
-}
+	if (mpdConf) {
+		mpd = require('./lib/mpd')(mpdConf);
+		mpd.on('connect', (con) => {
+			connectClient(con.socket.address().address, con);
+		});
+		mpd.on('disconnect', (con) => {
+			disconnectClient(con.socket.address().address, con);
+		});
+	}
+}).catch((err) => {
+	console.log(err);
+	process.exit();
+});
 
 module.exports = {
 	app,
