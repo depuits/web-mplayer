@@ -16,386 +16,147 @@
 		<a class="navbar-brand" href="#">MPlayer</a>
     </nav>
 
-    <div id="uiLoading" class="container main">
-		<div class="row"><div class="col-12 text-center"><h1>Connecting</h1></div></div>
-		<div class="row"><div class="col-12 text-center"><i class="fa fa-spinner fa-pulse fa-5x" aria-hidden="true"></i></div></div>
-	</div>
-
-	<div id="uiLoaded" class="container main">
-		<div class="row">
-			<div class="col-md-4 col-12">
-			</div>
-			<div class="col-md-4 col-12">
-				<div class="row">
-					<div class="col-12 text-center">
-						<div class="btn-group" role="group" aria-label="Controls">
-							<button type="button" class="btn btn-secondary js-ctrl-play"><i class="fa fa-pause js-ctrl-play-visual" aria-hidden="true"></i></button>
-							<button type="button" class="btn btn-secondary js-ctrl-next"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
-							<button type="button" class="btn btn-secondary js-ctrl-veto">Veto</button>
+	<div class="app">
+		<div v-show="!connected" class="container main">
+			<div class="row"><div class="col-12 text-center"><h1>Connecting</h1></div></div>
+			<div class="row"><div class="col-12 text-center"><i class="fa fa-spinner fa-pulse fa-5x" aria-hidden="true"></i></div></div>
+		</div>
+		<div class="container main">
+			<div class="row">
+				<div class="col-md-4 col-12">
+				</div>
+				<div class="col-md-4 col-12">
+					<div class="row">
+						<div class="col-12 text-center">
+							<div class="btn-group" role="group" aria-label="Controls">
+								<button type="button" @click="ctrlPlay" class="btn btn-secondary"><i class="fa" :class="{ 'fa-pause': playing, 'fa-play': !playing }" aria-hidden="true"></i></button>
+								<button type="button" @click="ctrlNext" class="btn btn-secondary"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
+								<button type="button" @click="ctrlVeto" class="btn btn-secondary">Veto</button>
+							</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-12">
+							<input type="range" min="0" max="100" v-model="volume" @input="ctrlVolume" style="width: 100%;"/>
 						</div>
 					</div>
 				</div>
-				<div class="row">
-					<div class="col-12">
-						<input type="range" min="0" max="100" class="js-ctrl-volume" style="width: 100%;"/>
+					
+				<div class="col-md-4 col-12">
+					<div id="votesChartWraper">
+						<canvas id="votesChart"></canvas>
 					</div>
 				</div>
 			</div>
-				
-			<div class="col-md-4 col-12">
-				<div id="votesChartWraper">
-					<canvas id="votesChart"></canvas>
+			
+			<div id="timeProgressbar">
+				<div class="progress">
+					<div class="progress-bar bg-inverse" role="progressbar" :aria-valuenow="time" aria-valuemin="0" :aria-valuemax="duration" :style="{ '--progress': time/duration }">{{ time }}</div>
+				</div>
+				<div class="sidenotes">
+					<div class="sidenote sidenote-left">0</div>
+					<div class="sidenote sidenote-right">{{ duration }}</div>
+				</div>
+			</div>
+
+			<table class="table text-center">
+				<tbody v-if="currentSong" :title="currentSong.path">
+					<tr><td class="font-weight-bold">{{ currentSong.title }}</td></tr>
+					<tr><td>{{ currentSong.artist }}</td></tr>
+				</tbody>
+			</table>
+					
+			<table class="table table-sm table-hover">
+				<thead>
+					<tr>
+						<th>#</th>
+						<th>Title</th>
+						<th>Artist</th>
+					</tr>
+				</thead>
+				<tbody id="requestlist">
+					<tr is="playlist-item" v-for="s in requestlist" :song="s" :index="'R'" :key="s._id"></tr>
+				</tbody>
+				<tbody id="playlist">
+					<tr is="playlist-item" v-for="(s, idx) in playlist" :song="s" :index="idx + 1" :key="s._id"></tr>
+				</tbody>
+			</table>
+			
+			<div class="row">
+				<div class="col">
+					<button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#requestModal">Request</button>
+					<soundbits :soundbits="soundbits"/>
+				</div>
+				<div class="col text-right">
+					<button type="button" @click="ctrlScan" :disabled="scanning" class="btn btn-secondary">Update library <i class="fa fa-refresh" :class="{ 'fa-spin': scanning }" aria-hidden="true"></i></button>
 				</div>
 			</div>
 		</div>
 		
-		<div id="timeProgressbar">
-			<div class="progress">
-				<div class="progress-bar bg-inverse" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="0">0</div>
+		<search inline-template>
+			<div class="modal fade" id="requestModal" tabindex="-1" role="dialog" aria-labelledby="requestModalLabel" aria-hidden="true">
+				<div class="modal-dialog modal-lg" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="requestModalLabel">Request</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+						<div class="modal-body">
+							<form class="input-group" @submit.prevent="doSearch">
+								<input type="search" class="form-control" v-model="search" placeholder="Search..." />
+								<div class="input-group-btn">
+									<button class="btn btn-secondary" type="submit"><i class="fa fa-search"></i></button>
+								</div>
+							</form>
+							<br/>
+							<div id="no-more-tables">
+								<table class="table table-sm table-hover">
+									<thead>
+										<tr>
+											<th>Title</th>
+											<th>Artist</th>
+										</tr>
+									</thead>
+									<tbody id="resultlist">
+										<tr is="search-result" v-for="s in result" :song="s" :key="s._id"></tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+						</div>
+					</div>
+				</div>
 			</div>
-			<div class="sidenotes">
-				<div class="sidenote sidenote-left js-time-past">0</div>
-				<div class="sidenote sidenote-right js-time-total">0</div>
-			</div>
-		</div>
-
-		<table class="table text-center">
-			<tbody id="currentSong">
-				<tr><td class="js-pl-title font-weight-bold"></td></tr>
-				<tr><td class="js-pl-artist"></td></tr>
-			</tbody>
-		</table>
-				
-		<table class="table table-sm table-hover">
-			<thead>
-				<tr>
-					<th>#</th>
-					<th>Title</th>
-					<th>Artist</th>
-				</tr>
-			</thead>
-			<tbody id="requestlist"></tbody>
-			<tbody id="playlist"></tbody>
-		</table>
-		
-		<div class="row">
-			<div class="col">
-				<button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#requestModal">Request</button>
-				<select class="custom-select js-soundbits">
-					<option value="" disabled selected hidden>Play soundbit</option>
-				</select>
-			</div>
-			<div class="col text-right">
-				<button type="button" class="btn btn-secondary js-ctrl-scan">Update library <i class="fa fa-refresh" aria-hidden="true"></i></button>
-			</div>
-		</div>
+		</search>
 	</div>
 
-	<script type="text/html" id="playlistItemTemplate">
-		<tr>
-			<th class="js-pl-id" scope="row">#</th>
-			<td class="js-pl-title"></td>
-			<td class="js-pl-artist"></td>
+	<script type="text/x-template" id="playlistItemTemplate">
+		<tr :title="song.path">
+			<th scope="row">{{ index }}</th>
+			<td :colspan="song.artist ? 1 : 2">{{ song.title }}</td>
+			<td v-if="song.artist">{{ song.artist }}</td>
 		</tr>
 	</script>
-	
-	<div class="modal fade" id="requestModal" tabindex="-1" role="dialog" aria-labelledby="requestModalLabel" aria-hidden="true">
-		<div class="modal-dialog modal-lg" role="document">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title" id="requestModalLabel">Request</h5>
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-					<span aria-hidden="true">&times;</span>
-					</button>
-				</div>
-				<div class="modal-body">
-					<form class="input-group" id="formSearch">
-						<input type="search" class="form-control" id="searchInput" placeholder="Search..." />
-						<div class="input-group-btn">
-							<button class="btn btn-secondary" type="submit"><i class="fa fa-search"></i></button>
-						</div>
-					</form>
-					<br/>
-					<div id="no-more-tables">
-						<table class="table table-sm table-hover">
-							<thead>
-								<tr>
-									<th>Title</th>
-									<th>Artist</th>
-								</tr>
-							</thead>
-							<tbody id="resultlist"><tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-				</div>
-			</div>
-		</div>
-	</div>
 
-	<script type="text/html" id="resultItemTemplate">	
-		<tr>
-			<td data-title="Title" class="js-pl-title"></td>
-			<td data-title="Artist" class="js-pl-artist"></td>
-			<td><button class="btn btn-secondary w-100" type="button"><i class="fa fa-plus"></i></button></td>
+	<script type="text/x-template" id="resultItemTemplate">
+		<tr :title="song.path">
+			<td data-title="Title">{{ song.title }}</td>
+			<td data-title="Artist">{{ song.artist }}</td>
+			<td><button class="btn btn-secondary w-100" type="button" @click="request"><i class="fa fa-plus"></i></button></td>
 		</tr>
 	</script>
 	
 	<script src="/socket.io/socket.io.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
-	<script>
-	$(document).ready(function () {
-		var $uiLoading = $('#uiLoading');
-		var $uiLoaded = $('#uiLoaded');
-
-		var ctx = document.getElementById('votesChart').getContext('2d');
-		var votesChart = new Chart(ctx, {
-			type: 'polarArea',
-			data: {
-				datasets: [{ 
-					data: [0, 0, 0] ,
-					backgroundColor: ['rgba(201,203,207,0.75)', 'rgba(255,99,132,0.75)', 'rgba(75,192,192,0.75)'],
-					borderColor: ['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.25)', 'rgba(255,255,255,0.25)']
-				}],
-				labels: [ 'No vote', 'Next', 'Veto' ]
-			},
-			options: { 
-				layout: { padding: 8 },
-				legend: { display: false },
-				scale: { ticks: { stepSize: 1 } }
-			}
-		});
-	
-		var $currentSong = $('#currentSong');
-		var $currentSongTitle = $currentSong.find('.js-pl-title');
-		var $currentSongArtist = $currentSong.find('.js-pl-artist');
-
-		var $playlistItemTemplate = $('#playlistItemTemplate');
-		var $requestlist = $('#requestlist');
-		var $playlist = $('#playlist');
-
-		var $btnPlayVisual = $('.js-ctrl-play-visual');
-		var $ctrlVolume = $('.js-ctrl-volume');
-		
-		var $progressbar = $('#timeProgressbar .progress-bar');
-		var $timePast = $('.js-time-past');
-		var $timeTotal = $('.js-time-total');
-		var timerId = undefined;
-
-		var $searchInput = $('#searchInput');
-		var $resultlist = $('#resultlist');
-		var $resultItemTemplate = $('#resultItemTemplate');
-		
-		var $soundbitsSelect = $('.js-soundbits');
-		
-		var $ctrlScan = $('.js-ctrl-scan');
-		var $ctrlScanVisual = $ctrlScan.find('i');
-		
-		var socket = io.connect();
-		socket.on('disconnect', function(){
-			//disable the ui
-			$uiLoading.show();
-			$uiLoaded.hide();
-		});
-		socket.on('playlist', function(data) {
-			//update current song
-			updateCurrent(data.current);
-
-			// update requests and playlist
-			//TODO update dom without rebuilding complete playlist
-			updatePlaylist($requestlist, data.requestlist, $playlistItemTemplate, 'R');
-			updatePlaylist($playlist, data.playlist, $playlistItemTemplate);
-		});
-		socket.on('status', function(status) {
-			//make sure the ui is enabled
-			$uiLoading.hide();
-			$uiLoaded.show();
-
-			updatePlayButton(status.playing);
-			updateVolumeBar(status.volume);
-			updateTime(status.time, status.duration);
-			updateScanVisual(status.scanning);
-			
-			//start or stop the timer according to the play state
-			if (status.playing && timerId === undefined) {
-				timerId = setInterval(updateTimeByOne, 1000);
-			} else if(!status.playing && timerId !== undefined) {
-				clearInterval(timerId);
-				timerId = undefined;
-			}
-		});
-		socket.on('votes', function(votes) {
-			updateVotesChart(votes);
-		});
-
-		$.get('soundbits', function(data) { addSoundbitData(data); });
-		function addSoundbitData(data, indent) {
-			var i = 0;
-			indent = indent || 0;
-			
-			var iStr = '';
-			for (i = 0; i < indent; ++i) {
-				iStr += '&nbsp;&nbsp;&nbsp;&nbsp;';
-			}
-			
-			for (i = 0; i < data.length; ++i) {
-				var lbl = iStr + data[i].name;
-				var val = data[i].value;
-				if(typeof val === 'string') {
-					$soundbitsSelect.append('<option value="' + val + '">' +lbl + '</option>');
-				} else {
-					// add header and recursion
-					$soundbitsSelect.append('<optgroup label="' + lbl + '">');
-					addSoundbitData(val, indent + 1);
-					$soundbitsSelect.append('</optgroup>');
-				}
-			}
-		}
-		
-		$soundbitsSelect.change(function() { 
-			// play the selection value
-			socket.emit('command', { cmd: 'playBit', file: $soundbitsSelect.val() });
-			// reset the selection to default
-			$soundbitsSelect.val('');
-		});
-		
-		$('.js-ctrl-play').click(function() { 
-			socket.emit('command', { cmd: 'togglePlay' });
-			return false;
-		});
-		$('.js-ctrl-next').click(function() { 
-			socket.emit('command', { cmd: 'next' });
-			return false;
-		});
-		$('.js-ctrl-veto').click(function() { 
-			socket.emit('command', { cmd: 'veto' });
-			return false;
-		});
-		$ctrlScan.click(function() {
-			socket.emit('command', { cmd: 'scan' });
-			return false;
-		});
-		
-		$('#formSearch').submit(function() {
-			var s = $searchInput.val();
-			$.get('find?s=' + s, function(data) {
-				updatePlaylist($resultlist, data, $resultItemTemplate, function($el) {
-					$el.find('button').click(function() {
-						var id = $el.data('id');
-						socket.emit('command', { cmd: 'request', id: id });	
-					});
-				});
-			});
-			return false;
-		});
-
-		$ctrlVolume.on('input change', function() {
-			var vol = $(this).val();
-			socket.emit('command', { cmd: 'volume', value: vol });
-			return false;
-		});
-		
-		function updateCurrent(current) {
-			$currentSongTitle.text(current.title);
-			$currentSongArtist.text(current.artist || '');
-			
-			document.title = 'MPlayer: ' + current.title;
-			if(current.artist) {
-				document.title += ' - ' + current.artist;
-			}
-
-			$currentSong.prop('title', current.path);
-		}
-		function updatePlaylist($listEl, list, $template, id, cb) {
-			if(typeof id === 'function') {
-				cb = id;
-				id = undefined;
-			}
-			//clear the previous list
-			$listEl.empty();
-
-			// loop all items in the list and add them to the element
-			for (var i = 0; i < list.length; ++i) {
-				var current = list[i];
-				var title = current.title;
-				var artist = current.artist;
-
-				var newTxt = $template.text();
-				var $newElem = $(newTxt);
-
-				$newElem.find('.js-pl-id').text(id || (i + 1));
-				var $title = $newElem.find('.js-pl-title');	
-				var $artist = $newElem.find('.js-pl-artist');
-				$title.text(title);
-				if(artist) {
-					$artist.text(artist);
-				} else {
-					$title.prop('colspan', 2);
-					$artist.remove();
-				}
-				
-				$newElem.prop('title', current.path);
-				$newElem.data('id', current._id);
-				$listEl.append($newElem);
-				
-				// report created item
-				if(cb) {
-					cb($newElem);
-				}
-			}
-		}
-		function updatePlayButton(playing) {
-			if(playing) {
-				$btnPlayVisual.removeClass('fa-play');
-				$btnPlayVisual.addClass('fa-pause');
-			} else {
-				$btnPlayVisual.removeClass('fa-pause');
-				$btnPlayVisual.addClass('fa-play');				
-			}
-		}
-		function updateVolumeBar(volume) {
-			if(volume != undefined)
-			$ctrlVolume.val(volume);
-		}
-		function updateVotesChart(votes) {
-			votesChart.options.scale.ticks.max = votes.all;
-		
-			var data = votesChart.data.datasets[0].data;
-			data[0] = votes.all - (votes.next + votes.veto);
-			data[1] = votes.next;
-			data[2] = votes.veto;
-
-			votesChart.update();
-		}
-		function updateTime(tNow, tMax) {
-			var rNow = Math.round(tNow);
-			var rMax = Math.round(tMax);
-			$progressbar.prop('aria-valuemax', tMax);
-			$progressbar.prop('aria-valuenow', tNow);
-			$progressbar.text(rNow);
-			var perc = (tNow / tMax) * 100;
-			$progressbar.css('width', perc + '%');
-			
-			$timePast.text(rNow);
-			$timeTotal.text(rMax);
-		}
-		function updateTimeByOne() {
-			var tMax = $progressbar.prop('aria-valuemax');
-			var tNow = $progressbar.prop('aria-valuenow') + 1;
-			updateTime(tNow, tMax);
-		}
-		
-		function updateScanVisual(scanning) {
-			$ctrlScan.prop('disabled', !!scanning);
-			$ctrlScanVisual.toggleClass('fa-spin', !!scanning);
-		}
-	});
-	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+	<script src="script.js"></script>
 </body>
 </html>

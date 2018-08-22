@@ -3,13 +3,6 @@ html {
 	min-height: 100%;
 }
 
-#uiLoading {
-	
-}
-#uiLoaded {
-	display: none;
-}
-
 .main {
 	padding-top: 24px;
 	padding-bottom: 24px;
@@ -39,6 +32,10 @@ html {
 }
 #timeProgressbar:hover .progress * {
 	height: 100%;
+}
+
+#timeProgressbar .progress-bar {
+	width: calc(var(--progress) * 100%)
 }
 
 #timeProgressbar .sidenotes {

@@ -40,6 +40,7 @@ function disconnectClient(fp, socket) {
 	if(clSockets.length === 0) {
 		clients.delete(fp);
 		console.log('client disconnected: ' + fp);
+		ctrl.removeVotes(fp);
 		sendVoteStatus();
 	}
 }
