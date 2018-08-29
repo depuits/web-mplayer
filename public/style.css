@@ -1,119 +1,229 @@
+/* General */
+:root {
+	--backColor: #fff;
+	--frontColor: #333;
+}
+
 html {
+	height: 100%;
+	width: 100%;
+	font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+	background-color: var(--backColor);
+	color: var(--frontColor);
+    overflow-y:scroll;
+}
+html, body {
+	margin: 0;
+	padding: 0;
+}
+
+/* Loading ui */
+.loader {
+	position: fixed;
+	
+	width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+	bottom: 0;
+
+	z-index: 10;
+	background-color: var(--backColor);
+}
+.loader > * {
+	text-align: center;
 	position: relative;
-	min-height: 100%;
+	top: 25%;
 }
 
-.main {
-	padding-top: 24px;
-	padding-bottom: 24px;
-}
-.main div[class^="col"] {
-	padding-top: 16px;
-	padding-bottom: 16px;
+/* Controls */
+header {
+	display: grid;
+	grid-template-columns: 33% 34% 33%;
+	grid-template-rows: 5em 1.5em;
+	grid-template-areas: 
+	  "c v d"
+	  "p p p";
+	
+    z-index: 8;
+	position: fixed;
+	width: 100%;
+	height: 6.5em;
+	top: 0;
+
+	background: var(--frontColor);
 }
 
-#votesChartWraper {
+.controls {
+	grid-area: c;
+}
+.volume {
+	grid-area: v;
+}
+.votes {
+	grid-area: d;
+	position: relative;
+}
+.duration {
+	grid-area: p;
+	text-align: center;
+	display: grid;
+	--progress: 0;
+	--perc: calc(var(--progress) * 100%);
+	grid-template-columns: var(--perc) calc(100% - var(--perc));
+}
+
+.duration :first-child {
+	background-color: var(--backColor);
+	color: var(--frontColor);
+	height: 100%;
+}
+.duration :last-child {
+	background-color: var(--frontColor);
+	color: var(--backColor);
+	height: 100%;
+}
+
+
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2em;
+    background: #d3d3d3;
+	transition: 0.3s;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    width: 16px;
+    height: 2em;
+    border-radius: 0;
+    background: #4CAF50;
+}
+
+.slider::-moz-range-thumb {
+    cursor: pointer;
+    width: 16px;
+    height: 2em;
+    border-radius: 0;
+    background: #4CAF50;
+	transition: 0.3s;
+}
+.slider:hover::-moz-range-thumb {
+    background: #333;
+}
+
+button {
+    background-color: #4CAF50;
+    border: none;
+    color: white;
+    padding: 4px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+	transition: 0.3s;
+	height: 2em;
+}
+input[type=search]:hover, select:hover, button:hover {
+	background-color: #333;
+}
+
+button:disabled {
+	background-color: #111;
+	cursor: not-allowed;
+}
+
+input[type=search], select {
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    appearance:none;
+    padding: 4px 16px;
+    background-color: #4CAF50;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border: 0;
+	transition: 0.3s;
+	height: 2em;
+}
+
+/* Playlist */
+main {
+	margin: auto;
+	margin-top: 6.5em;
+}
+
+@media screen and (min-width: 980px) {
+	main {
+		width: 70%;
+	}
+}
+
+.playlist {
+	display: flex;
+	flex-direction: column;
+}
+
+.playlist :first-child {
+	font-weight: bold;
+}
+
+.playlist > * {
+	display: flex;
+	transition: 0.4s;
+	align-items: center;
+	text-align: center;
+	padding: 4px 0;
+}
+
+.playlist > *:hover {
+	background-color: var(--frontColor);
+	color: var(--backColor);
+}
+
+.playlist > * > * {
+	margin: 0 8px;
+}
+.playlist > * :nth-child(1) {
+	flex-basis: 10%;
+}
+.playlist > * :nth-child(2) {
+	flex-basis: 45%;
+	flex-grow: 1;
+}
+.playlist > * :nth-child(3) {
+	flex-basis: 45%;
+	flex-grow: 1;
+}
+
+.playlist .song button {
 	width: 100%;
 	height: 100%;
 }
 
-#timeProgressbar {
-	height: 2em;
-	position: relative;
+.playlist-enter-active, .playlist-leave-active, .playlist-move {
+	transition: all 1s;
 }
-#timeProgressbar .progress {
+.playlist-enter, .playlist-leave-to {
+	opacity: 0;
+	transform: translateX(30px);
+}
+.playlist-leave-active {
 	position: absolute;
-	bottom: 0;
-	right: 24px;
-	left: 24px;
-}
-#timeProgressbar .progress * {
-	height: 1px;
-}
-#timeProgressbar:hover .progress * {
-	height: 100%;
 }
 
-#timeProgressbar .progress-bar {
-	width: calc(var(--progress) * 100%)
+
+.search-enter-active, .search-leave-active, .search-move {
+	transition: all 1s;
+}
+.search-enter, .search-leave-to {
+	opacity: 0;
+	transform: translateY(50px);
 }
 
-#timeProgressbar .sidenotes {
-	display: none;
-}
-#timeProgressbar:hover .sidenotes {
-	display: block;
-}
-.sidenotes {
-	position: absolute;
-	left: -8px;
-	right: -8px;
-	top: 0;
-	bottom: 0;
-}
-.sidenotes .sidenote {
-	position: absolute;
-	width: 24px;
-	bottom: 0;
-}
-.sidenotes .sidenote.sidenote-left {
-	left: 0;
-	text-align: right;
-}
-.sidenotes .sidenote.sidenote-right {
-	right: 0;
-	text-align: left;
-}
-
-@media only screen and (max-width: 800px) {
-    
-    /* Force table to not be like tables anymore */
-	#no-more-tables table, 
-	#no-more-tables thead, 
-	#no-more-tables tbody, 
-	#no-more-tables th, 
-	#no-more-tables td, 
-	#no-more-tables tr { 
-		display: block; 
-	}
- 
-	/* Hide table headers (but not display: none;, for accessibility) */
-	#no-more-tables thead tr { 
-		position: absolute;
-		top: -9999px;
-		left: -9999px;
-	}
- 
-	#no-more-tables tr { border: 1px solid #ccc; }
- 
-	#no-more-tables td { 
-		/* Behave  like a "row" */
-		border: none;
-		border-bottom: 1px solid #eee;
-		position: relative;
-		white-space: normal;
-		text-align:left;
-		overflow-wrap: break-word;
-	}
-	#no-more-tables td[data-title] { 
-		padding-left: 27%; 
-	}
- 
-	#no-more-tables td[data-title]:before { 
-		/* Now like a table header */
-		position: absolute;
-		/* Top/left values mimic padding */
-		top: 6px;
-		left: 6px;
-		width: 25%; 
-		padding-right: 10px; 
-		white-space: nowrap;
-		text-align:right;
-		font-weight: bold;
-	}
- 
-	/*
-	Label the data
-	*/
-	#no-more-tables td[data-title]:before { content: attr(data-title); }
-}
