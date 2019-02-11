@@ -17,11 +17,11 @@
   "dependencies": {
     "bluebird": "^3.5.3",
     "body-parser": "^1.18.3",
-    "config": "^1.31.0",
+    "config": "^3.0.1",
     "express": "^4.16.4",
     "mongodb": "^3.1.13",
     "mpd-server": "^1.0.1",
-    "music-metadata": "^0.8.7",
+    "music-metadata": "^3.5.2",
     "node-mpv": "github:00SteinsGate00/Node-MPV#Node-MPV-2",
     "socket.io": "^2.2.0"
   }
