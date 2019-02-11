@@ -2,8 +2,13 @@ var timerId = undefined;
 var socket = io.connect();
 
 var compPlaylistItem = { 
-	props: ['song', 'index'],
-	template: '#playlistItemTemplate' 
+	props: ['song'],
+	template: '#playlistItemTemplate',
+	methods: {
+		request: function() {
+			socket.emit('command', { cmd: 'request', id: this.song._id });	
+		}
+	}
 };
 
 var compSoundbit = {
@@ -48,15 +53,6 @@ var compSoundbits = {
 	}
 };
 
-var compSearchResult = {
-	props: ['song'],
-	template: '#resultItemTemplate',
-	methods: {
-		request: function() {
-			socket.emit('command', { cmd: 'request', id: this.song._id });	
-		}
-	}
-};
 var compSearch = {
 	data: function () {
 		return {
@@ -70,7 +66,7 @@ var compSearch = {
 		}
 	},
 	components: {
-		'search-result': compSearchResult
+		'playlist-item': compPlaylistItem
 	}
 };
 
@@ -87,7 +83,8 @@ var app = new Vue({
 		duration: 0,
 		scanning: false,
 		soundbits: [],
-		votes: []
+		votes: [],
+		showSearch: false
 	},
 	methods: {
 		ctrlPlay: function() { 
@@ -104,6 +101,29 @@ var app = new Vue({
 		},
 		ctrlVolume: function() {
 			socket.emit('command', { cmd: 'volume', value: this.volume });
+		}
+	},
+	computed: {
+		allSongs: function() {
+			let doMap = function(idx) {
+				return function(x, i) {
+					x.idx = idx || i+1;
+					return x;
+				}
+			}
+
+			let lst = [];
+			if (this.currentSong) {
+				lst.push(doMap('C')(this.currentSong));
+			}
+
+			lst.push(...this.requestlist.map(doMap('R')));
+			lst.push(...this.playlist.map(doMap()));
+
+			return lst;
+		},
+		progress: function() {
+			return this.duration ? this.time/this.duration : 0;
 		}
 	},
 	components: {
@@ -143,7 +163,9 @@ socket.on('status', function(status) {
 
 	//start or stop the timer according to the play state
 	if (app.playing && timerId === undefined) {
-		timerId = setInterval(function() { ++app.time; }, 1000);
+		timerId = setInterval(function() { 
+			app.time = Math.min(app.time+1, app.duration);
+		}, 1000);
 	} else if(!app.playing && timerId !== undefined) {
 		clearInterval(timerId);
 		timerId = undefined;
@@ -165,7 +187,9 @@ var votesChart = new Chart(ctx, {
 		}],
 		labels: [ 'No vote', 'Next', 'Veto' ]
 	},
-	options: { 
+	options: {
+		responsive: true,
+		maintainAspectRatio: false,
 		layout: { padding: 8 },
 		legend: { display: false },
 		scale: { ticks: { stepSize: 1 } }

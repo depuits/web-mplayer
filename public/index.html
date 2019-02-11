@@ -6,156 +6,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<title>MPlayer</title>
 
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 	<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-	<nav class="navbar navbar-inverse bg-inverse">
-		<a class="navbar-brand" href="#">MPlayer</a>
-    </nav>
-
 	<div class="app">
-		<div v-show="!connected" class="container main">
-			<div class="row"><div class="col-12 text-center"><h1>Connecting</h1></div></div>
-			<div class="row"><div class="col-12 text-center"><i class="fa fa-spinner fa-pulse fa-5x" aria-hidden="true"></i></div></div>
-		</div>
-		<div class="container main">
-			<div class="row">
-				<div class="col-md-4 col-12">
-				</div>
-				<div class="col-md-4 col-12">
-					<div class="row">
-						<div class="col-12 text-center">
-							<div class="btn-group" role="group" aria-label="Controls">
-								<button type="button" @click="ctrlPlay" class="btn btn-secondary"><i class="fa" :class="{ 'fa-pause': playing, 'fa-play': !playing }" aria-hidden="true"></i></button>
-								<button type="button" @click="ctrlNext" class="btn btn-secondary"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
-								<button type="button" @click="ctrlVeto" class="btn btn-secondary">Veto</button>
-							</div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-12">
-							<input type="range" min="0" max="100" v-model="volume" @input="ctrlVolume" style="width: 100%;"/>
-						</div>
-					</div>
-				</div>
-					
-				<div class="col-md-4 col-12">
-					<div id="votesChartWraper">
-						<canvas id="votesChart"></canvas>
-					</div>
-				</div>
-			</div>
-			
-			<div id="timeProgressbar">
-				<div class="progress">
-					<div class="progress-bar bg-inverse" role="progressbar" :aria-valuenow="time" aria-valuemin="0" :aria-valuemax="duration" :style="{ '--progress': time/duration }">{{ time }}</div>
-				</div>
-				<div class="sidenotes">
-					<div class="sidenote sidenote-left">0</div>
-					<div class="sidenote sidenote-right">{{ duration }}</div>
-				</div>
+		<header>
+			<div class="controls">
+				<button type="button" @click="ctrlPlay"><i class="fa" :class="{ 'fa-pause': playing, 'fa-play': !playing }" aria-hidden="true"></i></button>
+				<button type="button" @click="ctrlNext"><i class="fa fa-step-forward" aria-hidden="true"></i></button>
+				<button type="button" @click="ctrlVeto">Veto</button>
+				<soundbits :soundbits="soundbits"></soundbits>
 			</div>
 
-			<table class="table text-center">
-				<tbody v-if="currentSong" :title="currentSong.path">
-					<tr><td class="font-weight-bold">{{ currentSong.title }}</td></tr>
-					<tr><td>{{ currentSong.artist }}</td></tr>
-				</tbody>
-			</table>
-					
-			<table class="table table-sm table-hover">
-				<thead>
-					<tr>
-						<th>#</th>
-						<th>Title</th>
-						<th>Artist</th>
-					</tr>
-				</thead>
-				<tbody id="requestlist">
-					<tr is="playlist-item" v-for="s in requestlist" :song="s" :index="'R'" :key="s._id"></tr>
-				</tbody>
-				<tbody id="playlist">
-					<tr is="playlist-item" v-for="(s, idx) in playlist" :song="s" :index="idx + 1" :key="s._id"></tr>
-				</tbody>
-			</table>
+			<div class="volume"><input type="range" class="slider" min="0" max="100" v-model="volume" @input="ctrlVolume"/></div>
+
+			<div class="votes"><canvas id="votesChart"></canvas></div>
+
+			<div class="duration" :style="{ '--progress': progress }">
+				<div>{{ time }}</div>
+				<div>{{ duration - time }}</div>
+			</div>
+		</header>
+		<main>
+			<transition-group name="playlist" class="playlist">
+				<div :key="'header'">
+					<div>#</div>
+					<div>Title</div>
+					<div>Artist</div>
+				</div>
+
+				<playlist-item v-for="s in allSongs" :song="s" :key="s._id"></playlist-item>
+			</transition-group>
 			
 			<div class="row">
-				<div class="col">
-					<button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#requestModal">Request</button>
-					<soundbits :soundbits="soundbits"/>
-				</div>
-				<div class="col text-right">
-					<button type="button" @click="ctrlScan" :disabled="scanning" class="btn btn-secondary">Update library <i class="fa fa-refresh" :class="{ 'fa-spin': scanning }" aria-hidden="true"></i></button>
-				</div>
+				<button type="button" @click="showSearch = !showSearch">Request</button>
+				<button type="button" @click="ctrlScan" :disabled="scanning">Update library <i class="fa fa-refresh" :class="{ 'fa-spin': scanning }"></i></button>
+			</div>
+
+			<search v-show="showSearch" @close="showSearch = false" inline-template>
+				<transition name="search">
+					<div>
+						<form class="input-group" @submit.prevent="doSearch">
+							<input type="search" class="form-control" v-model="search" placeholder="Search..." />
+							<button class="btn btn-secondary" type="submit"><i class="fa fa-search"></i></button>
+						</form>
+						<br/>
+						<transition-group name="playlist" class="playlist">
+							<playlist-item v-for="s in result" :song="s" :key="s._id"></playlist-item>
+						</transition-group>
+					</div>
+				</transition>
+			</search>
+		</main>
+
+		<div v-show="!connected" class="loader">
+			<div>
+				<h1>Connecting</h1>
+				<p><i class="fa fa-spinner fa-pulse fa-5x" aria-hidden="true"></i></p>
 			</div>
 		</div>
-		
-		<search inline-template>
-			<div class="modal fade" id="requestModal" tabindex="-1" role="dialog" aria-labelledby="requestModalLabel" aria-hidden="true">
-				<div class="modal-dialog modal-lg" role="document">
-					<div class="modal-content">
-						<div class="modal-header">
-							<h5 class="modal-title" id="requestModalLabel">Request</h5>
-							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-							</button>
-						</div>
-						<div class="modal-body">
-							<form class="input-group" @submit.prevent="doSearch">
-								<input type="search" class="form-control" v-model="search" placeholder="Search..." />
-								<div class="input-group-btn">
-									<button class="btn btn-secondary" type="submit"><i class="fa fa-search"></i></button>
-								</div>
-							</form>
-							<br/>
-							<div id="no-more-tables">
-								<table class="table table-sm table-hover">
-									<thead>
-										<tr>
-											<th>Title</th>
-											<th>Artist</th>
-										</tr>
-									</thead>
-									<tbody id="resultlist">
-										<tr is="search-result" v-for="s in result" :song="s" :key="s._id"></tr>
-									</tbody>
-								</table>
-							</div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-						</div>
-					</div>
-				</div>
-			</div>
-		</search>
 	</div>
 
 	<script type="text/x-template" id="playlistItemTemplate">
-		<tr :title="song.path">
-			<th scope="row">{{ index }}</th>
-			<td :colspan="song.artist ? 1 : 2">{{ song.title }}</td>
-			<td v-if="song.artist">{{ song.artist }}</td>
-		</tr>
-	</script>
-
-	<script type="text/x-template" id="resultItemTemplate">
-		<tr :title="song.path">
-			<td data-title="Title">{{ song.title }}</td>
-			<td data-title="Artist">{{ song.artist }}</td>
-			<td><button class="btn btn-secondary w-100" type="button" @click="request"><i class="fa fa-plus"></i></button></td>
-		</tr>
+		<div class="song" :title="song.path">
+			<div v-if="song.idx">{{ song.idx }}</div>
+			<div v-else><button type="button" @click="request"><i class="fa fa-plus"></i></button></div>
+			<div>{{ song.title }}</div>
+			<div>{{ song.artist }}</div>
+		</div>
 	</script>
 	
 	<script src="/socket.io/socket.io.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
 	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-	<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 	<script src="script.js"></script>
 </body>
