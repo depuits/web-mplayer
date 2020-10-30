@@ -21,9 +21,9 @@ var config = {
 	soundBitVolume: 100,
 	playlistSize: 20,
 	nextDelay: 10000,
-	mpd: {
-		port: 6600
-	}
+	playerOptions: { audio_only: true },
+	playerArguments: [],
+	mpd: { port: 6600 }
 };
 
 module.exports = config;

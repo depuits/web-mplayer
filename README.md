@@ -32,6 +32,8 @@ soundBitDir   |Sound bit directory                    |string  |./soundbits
 soundBitVolume|Volume for playing soundbits           |int     |100     
 playlistSize  |Size of the randomly generated playlist|int     |20      
 nextDelay     |Delay for actually skipping song       |number  |10000   
+playerOptions |Options passed to the [player library](https://github.com/j-holub/Node-MPV#usage)|object|{ audio_only: true }
+playerArguments|Arguments list passed to the mpv instance|array|[]
 mpd           |Object with mpd config, this object is past to the [`listen`](https://github.com/depuits/mpd-server#methods) method of mpd-server |object  |{ port: 6600 }
 
 # usage
