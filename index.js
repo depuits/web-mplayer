@@ -97,7 +97,10 @@ function handleCommand(data) {
 
 function sendPlayerStatus(socket) {
 	socket = socket || io;
-	socket.emit('status', ctrl.status);
+	ctrl.getStatus().then(status => {
+		socket.emit('status', status);
+	});
+	//TODO something catch
 }
 function sendVoteStatus(socket) {
 	var data = ctrl.votes;
