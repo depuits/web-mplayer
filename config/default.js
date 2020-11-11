@@ -4,6 +4,7 @@ var path = require('path');
 
 var config = {
 	port: 3003,
+	playlistSize: 20,
 	musicDir: '',
 	blacklist: [],
 	extensions: [ 
@@ -15,14 +16,29 @@ var config = {
 		'.m4a',
 		'.flac'
 	],
-	dbUrl: 'mongodb://localhost:27017',
-	dbName: 'musiclib',
-	soundBitDir: path.join(__dirname, '..', 'soundbits'),
-	soundBitVolume: 100,
-	playlistSize: 20,
+
 	nextDelay: 10000,
-	playerOptions: { audio_only: true },
-	playerArguments: [],
+
+	db: {
+		url: 'mongodb://localhost:27017',
+		name: 'musiclib',
+	},
+
+	soundBit: {
+		dir: path.join(__dirname, '..', 'soundbits'),
+		volume: 100,
+		player: {
+			options: { 
+				audio_only: true,
+				socket: '/tmp/node-mpv-soundbit.sock',
+			},
+			arguments: [],
+		},
+	},
+	player: {
+		options: { audio_only: true },
+		arguments: [],
+	},
 	mpd: { port: 6600 }
 };
 
