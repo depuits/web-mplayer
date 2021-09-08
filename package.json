@@ -23,6 +23,6 @@
     "mpd-server": "^1.0.1",
     "music-metadata": "^7.4.1",
     "node-mpv": "^2.0.0-beta.0",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.4.1"
   }
 }

@@ -31,6 +31,9 @@ function connectClient(fp, socket) {
 }
 function disconnectClient(fp, socket) {
 	let clSockets = clients.get(fp);
+	if (!clSockets) {
+		return;
+	}
 	let index = clSockets.indexOf(socket);
 	if (index > -1) {
 		clSockets.splice(index, 1);
